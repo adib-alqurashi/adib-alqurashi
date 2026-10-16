@@ -1,16 +1,26 @@
-## Hi there 👋
+# Hi, I’m Adeeb Alqurashi
 
-<!--
-**adib-alqurashi/adib-alqurashi** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+Third-year Data Science student at King Fahd University of Petroleum & Minerals (KFUPM).
 
-Here are some ideas to get you started:
+I’m interested in research, mathematics, and turning what I learn into useful projects. I’m working toward a future in academic research.
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## Currently
+
+- Studying Introduction to Data Science.
+- Working on a Kaggle competition.
+- Studying in Stage 1 of KAUST Academy.
+- Preparing for mathematics competitions.
+
+## Campus involvement
+
+Contributing to the DSE and Computer Clubs through applied projects and growth and development committee work.
+
+## Here on GitHub
+
+Sharing projects, experiments, and notes as I develop my skills in data science and programming.
+
+---
+
+“I have limits. What I create will go beyond them.”
+
+reach at adib.alqurashi@gmail.com
