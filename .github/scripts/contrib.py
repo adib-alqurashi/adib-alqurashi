@@ -1,4 +1,4 @@
-"""Draw the last 12 months of contributions as a GitHub-style grid (no year shown).
+"""Draw the last 12 months of contributions as a dot-and-line chart (no year shown).
 
 Usage: python contrib.py <github-user> <out.svg> [calendar.json]
 THEME=light|dark (default dark). Reads GITHUB_TOKEN when no calendar.json is given.
@@ -35,27 +35,50 @@ THEMES = {
 T = THEMES[os.environ.get("THEME", "dark")]
 LEVEL = dict(zip(["NONE", "FIRST_QUARTILE", "SECOND_QUARTILE", "THIRD_QUARTILE", "FOURTH_QUARTILE"], T["levels"]))
 
-W, H = 880, 206
-X0, Y0, STEP, CELL = 58, 66, 14.5, 11
+W, H = 880, 230
+days_all = [d for w in cal["weeks"] for d in w["contributionDays"]]
+N = len(days_all)
+px0, px1, py0, py1 = 52, W - 24, 58, H - 52
+peak = max([d["contributionCount"] for d in days_all] + [1])
+ymax = max(4, -(-peak // 2) * 2)  # round up to an even number
 
-cells, months, last_month, last_label = [], [], None, -9
-for wi, week in enumerate(cal["weeks"]):
-    for d in week["contributionDays"]:
-        x, y = X0 + wi * STEP, Y0 + d["weekday"] * STEP
-        fill = LEVEL.get(d["contributionLevel"], LEVEL["NONE"])
-        day = dt.date.fromisoformat(d["date"])
-        cells.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{CELL}" height="{CELL}" rx="2" fill="{fill}">'
-                     f'<title>{d["contributionCount"]} contributions on {day.strftime("%B %d")}</title></rect>')
-    m = dt.date.fromisoformat(week["contributionDays"][0]["date"]).month
-    if m != last_month and wi < len(cal["weeks"]) - 2 and wi - last_label >= 3:
-        last_label = wi
-        months.append(f'<text x="{X0 + wi * STEP:.1f}" y="{Y0 - 8}">{dt.date(2000, m, 1).strftime("%b")}</text>')
-    last_month = m
 
-days = "".join(f'<text x="{X0 - 8}" y="{Y0 + i * STEP + 10:.1f}" text-anchor="end">{n}</text>'
-               for i, n in [(1, "Mon"), (3, "Wed"), (5, "Fri")])
-legend = "".join(f'<rect x="{762 + i * 14.5:.1f}" y="{H - 30}" width="{CELL}" height="{CELL}" rx="2" fill="{c}"/>'
-                 for i, c in enumerate(LEVEL.values()))
+def X(i):
+    return px0 + i * (px1 - px0) / max(N - 1, 1)
+
+
+def Y(v):
+    return py1 - v / ymax * (py1 - py0)
+
+
+GREEN, GREEN_LINE = T["levels"][4], T["levels"][3]
+parts = []
+for v in (0, ymax // 2, ymax):
+    parts.append(f'<line x1="{px0}" x2="{px1}" y1="{Y(v):.1f}" y2="{Y(v):.1f}" stroke="{T['line']}" stroke-opacity="{1 if v == 0 else .6}"'
+                 + ('' if v == 0 else ' stroke-dasharray="3 4"') + '/>')
+    parts.append(f'<text x="{px0 - 10}" y="{Y(v) + 4:.1f}" text-anchor="end" font-size="11" fill="{T['muted']}">{v}</text>')
+last_m = None
+for i, d in enumerate(days_all):
+    day = dt.date.fromisoformat(d["date"])
+    if day.month != last_m and day.day <= 7 and i < N - 10:
+        parts.append(f'<text x="{X(i):.1f}" y="{py1 + 20}" font-size="12" fill="{T['muted']}">{day.strftime("%b")}</text>')
+        parts.append(f'<line x1="{X(i):.1f}" x2="{X(i):.1f}" y1="{py1}" y2="{py1 + 5}" stroke="{T['line']}"/>')
+    last_m = day.month
+cnt = [d["contributionCount"] for d in days_all]
+avg = [sum(cnt[max(0, i - 6):i + 1]) / 7 for i in range(N)]
+line = "M" + " L".join(f"{X(i):.1f},{Y(a):.1f}" for i, a in enumerate(avg))
+parts.append(f'<path d="{line} L{X(N - 1):.1f},{py1} L{X(0):.1f},{py1} Z" fill="{GREEN_LINE}" fill-opacity=".12"/>')
+parts.append(f'<path d="{line}" fill="none" stroke="{GREEN_LINE}" stroke-width="2" stroke-linejoin="round"/>')
+for i, d in enumerate(days_all):
+    c = d["contributionCount"]
+    if c:
+        r = 3 + min(c, 10) * .35
+        parts.append(f'<circle cx="{X(i):.1f}" cy="{Y(c):.1f}" r="{r:.1f}" fill="{GREEN}" fill-opacity=".9" stroke="{T['bg']}" stroke-width="1.5">'
+                     f'<title>{c} contributions on {dt.date.fromisoformat(d["date"]).strftime("%B %d")}</title></circle>')
+key = (f'<circle cx="{W - 250}" cy="{H - 15}" r="4" fill="{GREEN}"/>'
+       f'<text x="{W - 240}" y="{H - 11}" font-size="12" fill="{T['muted']}">daily contributions</text>'
+       f'<line x1="{W - 112}" x2="{W - 94}" y1="{H - 15}" y2="{H - 15}" stroke="{GREEN_LINE}" stroke-width="2"/>'
+       f'<text x="{W - 88}" y="{H - 11}" font-size="12" fill="{T['muted']}">7-day average</text>')
 total = cal["totalContributions"]
 counts = [d["contributionCount"] for w in cal["weeks"] for d in w["contributionDays"]]
 active = sum(1 for c in counts if c)
@@ -79,9 +102,7 @@ svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{
 <rect x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="6" fill="{T['bg']}" stroke="{T['line']}"/>
 <text x="20" y="30" font-size="15" font-weight="600" fill="{T['fg']}">{total} contributions in the last 12 months</text>
 <text x="{W - 20}" y="30" text-anchor="end" font-size="13" fill="{T['muted']}" xml:space="preserve">{stat_txt}</text>
-<g font-size="12" fill="{T['muted']}">{''.join(months)}{days}
-<text x="754" y="{H - 20}" text-anchor="end">Less</text><text x="{762 + 5 * 14.5 + 4:.1f}" y="{H - 20}">More</text></g>
-{''.join(cells)}{legend}
+{''.join(parts)}{key}
 </svg>"""
 os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
 open(out, "w").write(svg)
