@@ -8,7 +8,9 @@ import sys
 from xml.sax.saxutils import escape as e
 
 # ------------------------------------------------------------------ DATA
-ABOUT = [("University", "KFUPM"), ("Major", "Data Science, B.S."), ("Year", "Third year"), ("Focus", "Research & Math")]
+ABOUT = [("University", "KFUPM"), ("Major", "Data Science, B.S."), ("Year", "Third year"),
+         ("Focus", "Research & Math"), ("Based in", "Dammam, Saudi Arabia")]
+BUTTONS = [("email", "Email"), ("linkedin", "LinkedIn"), ("x", "X")]
 SKILLS = ["Python", "Java", "NumPy", "pandas", "Matplotlib", "scikit-learn",
           "OOP", "Data structures", "Algorithms", "LaTeX", "Overleaf"]
 NOW = [  # icon, kind, title, caption, color
@@ -50,10 +52,10 @@ def svg(h, body, label, t):
 
 
 def profile(t):
-    h = 172
+    h = 182
     b = []
     for i, (k, v) in enumerate(ABOUT):
-        y = 40 + i * 34
+        y = 38 + i * 30
         b.append(f'<text x="24" y="{y}" font-size="12" fill="{t["muted"]}">{e(k)}</text>'
                  f'<text x="110" y="{y}" font-size="15" font-weight="600" fill="{t["fg"]}">{e(v)}</text>')
     b.append(f'<line x1="330" x2="330" y1="20" y2="{h - 20}" stroke="{t["line"]}"/>')
@@ -95,10 +97,24 @@ def now(t):
     return svg(h, "".join(b), "Working on now: " + "; ".join(f"{n[2]} ({n[3]})" for n in NOW), t)
 
 
+def button(kind, label, t):
+    st = f'fill="none" stroke="{t["fg"]}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"'
+    ic = {"email": f'<rect x="14" y="11" width="16" height="12" rx="2" {st}/><path d="M15 12.5l7 5 7-5" {st}/>',
+          "linkedin": f'<rect x="14" y="12.5" width="16" height="11" rx="2" {st}/><path d="M19 12.5v-1.5a1.2 1.2 0 0 1 1.2-1.2h3.6a1.2 1.2 0 0 1 1.2 1.2v1.5M14 17.5h16" {st}/>',
+          "x": f'<path d="M15 10.5l12 13M27 10.5l-12 13" {st}/>'}[kind]
+    w = int(width(label, 14, True) + 52)
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} 34" width="{w}" height="34" font-family="{FONT}" role="img" aria-label="{e(label)}">'
+            f'<rect x=".5" y=".5" width="{w - 1}" height="33" rx="6" fill="{t["sub"]}" stroke="{t["line"]}"/>{ic}'
+            f'<text x="38" y="22" font-size="14" font-weight="600" fill="{t["fg"]}">{e(label)}</text></svg>')
+
+
 if __name__ == "__main__":
     out = sys.argv[1]
     os.makedirs(out, exist_ok=True)
     for name, fn in [("profile", profile), ("now", now)]:
         for theme, t in THEMES.items():
             open(os.path.join(out, f"{name}-{theme}.svg"), "w").write(fn(t))
+    for kind, label in BUTTONS:
+        for theme, t in THEMES.items():
+            open(os.path.join(out, f"btn-{kind}-{theme}.svg"), "w").write(button(kind, label, t))
     print("ok")

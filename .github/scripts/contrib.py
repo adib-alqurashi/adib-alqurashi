@@ -57,10 +57,28 @@ days = "".join(f'<text x="{X0 - 8}" y="{Y0 + i * STEP + 10:.1f}" text-anchor="en
 legend = "".join(f'<rect x="{762 + i * 14.5:.1f}" y="{H - 30}" width="{CELL}" height="{CELL}" rx="2" fill="{c}"/>'
                  for i, c in enumerate(LEVEL.values()))
 total = cal["totalContributions"]
+counts = [d["contributionCount"] for w in cal["weeks"] for d in w["contributionDays"]]
+active = sum(1 for c in counts if c)
+longest = run = 0
+for c in counts:
+    run = run + 1 if c else 0
+    longest = max(longest, run)
+current = 0
+for i, c in enumerate(reversed(counts)):
+    if c:
+        current += 1
+    elif i:  # today may not have activity yet
+        break
+def b(v):
+    return f'<tspan fill="{T["fg"]}" font-weight="600">{v}</tspan>'
+def days_(n):
+    return f"{b(n)} day" + ("" if n == 1 else "s")
+stat_txt = f"{b(active)} active days   ·   Longest streak {days_(longest)}   ·   Current streak {days_(current)}"
 
 svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" font-family="{FONT}" role="img" aria-label="{total} contributions in the last 12 months">
 <rect x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="6" fill="{T['bg']}" stroke="{T['line']}"/>
 <text x="20" y="30" font-size="15" font-weight="600" fill="{T['fg']}">{total} contributions in the last 12 months</text>
+<text x="{W - 20}" y="30" text-anchor="end" font-size="13" fill="{T['muted']}" xml:space="preserve">{stat_txt}</text>
 <g font-size="12" fill="{T['muted']}">{''.join(months)}{days}
 <text x="754" y="{H - 20}" text-anchor="end">Less</text><text x="{762 + 5 * 14.5 + 4:.1f}" y="{H - 20}">More</text></g>
 {''.join(cells)}{legend}
