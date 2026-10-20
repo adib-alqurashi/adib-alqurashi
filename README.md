@@ -21,6 +21,13 @@ Sharing projects, experiments, and notes as I develop my skills in data science 
 
 ---
 
+## Activity
+
+[![Adeeb's GitHub activity graph](https://github-readme-activity-graph.vercel.app/graph?username=adib-alqurashi&theme=github-compact&hide_border=true&custom_title=Recent%20Activity)](https://github.com/Ashutosh00710/github-readme-activity-graph)
+
+
+
+
 “I have limits. What I create will go beyond them.”
 
 reach at adib.alqurashi@gmail.com
