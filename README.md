@@ -1,29 +1,21 @@
 ## Hi, I'm Adeeb Alqurashi
 
-I'm a third-year **Data Science** student at **King Fahd University of Petroleum & Minerals (KFUPM)**. I like research and mathematics, and I enjoy turning what I learn into projects that are actually useful. My goal is a career in academic research.
+I'm a third-year **Data Science** student at **King Fahd University of Petroleum & Minerals (KFUPM)**. I like research and mathematics, and I enjoy turning what I learn into projects that are actually useful. My goal is a career in academic research. On campus, I contribute to the DSE and Computer Clubs.
 
 [Email](mailto:adib.alqurashi@gmail.com) · [LinkedIn](https://www.linkedin.com/in/adib-alqurashi-347527444) · [X](https://x.com/adib_alqurashi)
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/glance-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="assets/glance-light.svg" />
-  <img alt="At a glance: University KFUPM, Major Data Science, Third year, Focus Research and Math" src="assets/glance-light.svg" width="100%" />
+  <source media="(prefers-color-scheme: dark)" srcset="assets/profile-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="assets/profile-light.svg" />
+  <img alt="University KFUPM; Major Data Science, B.S.; Third year; Focus Research and Math. Skills: Python, Java, NumPy, pandas, Matplotlib, scikit-learn, OOP, data structures, algorithms, LaTeX, Overleaf." src="assets/profile-light.svg" width="100%" />
 </picture>
 
-### What I'm working on
+### Right now
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/now-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="assets/now-light.svg" />
-  <img alt="In progress: Introduction to Data Science; a Kaggle competition; KAUST Academy Stage 1; mathematics competitions; DSE and Computer Clubs" src="assets/now-light.svg" width="100%" />
-</picture>
-
-### Skills
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/skills-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="assets/skills-light.svg" />
-  <img alt="Languages: Python, Java. Python libraries: NumPy, pandas, Matplotlib, scikit-learn. Computer science: OOP with Java, data structures, algorithms. Scientific writing: LaTeX, Overleaf." src="assets/skills-light.svg" width="100%" />
+  <img alt="Right now: Intro to Data Science course at KFUPM; a Kaggle competition; KAUST Academy Stage 1; preparing for math competitions." src="assets/now-light.svg" width="100%" />
 </picture>
 
 ### Activity

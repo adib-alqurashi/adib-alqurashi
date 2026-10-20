@@ -8,21 +8,14 @@ import sys
 from xml.sax.saxutils import escape as e
 
 # ------------------------------------------------------------------ DATA
-GLANCE = [("University", "KFUPM"), ("Major", "Data Science"), ("Year", "Third year"), ("Focus", "Research & Math")]
-
-NOW = [  # title, label, label color key, one-line description
-    ("Introduction to Data Science", "course", "blue", "A core course I'm taking at KFUPM"),
-    ("Kaggle competition", "competition", "purple", "Working on a live machine-learning challenge"),
-    ("KAUST Academy, Stage 1", "program", "green", "Studying in the first stage of the program"),
-    ("Mathematics competitions", "math", "orange", "Preparing for upcoming competitions"),
-    ("DSE & Computer Clubs", "campus", "pink", "Applied projects and growth & development committee work"),
-]
-
-SKILLS = [
-    ("Languages", ["Python", "Java"]),
-    ("Python libraries", ["NumPy", "pandas", "Matplotlib", "scikit-learn"]),
-    ("Computer science", ["OOP with Java", "Data structures", "Algorithms"]),
-    ("Scientific writing", ["LaTeX", "Overleaf"]),
+ABOUT = [("University", "KFUPM"), ("Major", "Data Science, B.S."), ("Year", "Third year"), ("Focus", "Research & Math")]
+SKILLS = ["Python", "Java", "NumPy", "pandas", "Matplotlib", "scikit-learn",
+          "OOP", "Data structures", "Algorithms", "LaTeX", "Overleaf"]
+NOW = [  # icon, kind, title, caption, color
+    ("book", "Course", "Intro to Data Science", "Core course at KFUPM", "blue"),
+    ("flag", "Competition", "Kaggle", "A live ML challenge", "purple"),
+    ("star", "Program", "KAUST Academy", "Stage 1", "green"),
+    ("sigma", "Math", "Competitions", "Preparing now", "orange"),
 ]
 
 # ------------------------------------------------------------------ THEME
@@ -56,65 +49,56 @@ def svg(h, body, label, t):
             f'{body}</svg>')
 
 
-def glance(t):
-    h, n = 84, len(GLANCE)
-    cw = W / n
+def profile(t):
+    h = 172
     b = []
-    for i, (k, v) in enumerate(GLANCE):
-        x = i * cw + 20
-        if i:
-            b.append(f'<line x1="{i * cw:.1f}" x2="{i * cw:.1f}" y1="16" y2="{h - 16}" stroke="{t["line"]}"/>')
-        b.append(f'<text x="{x:.1f}" y="34" font-size="12" fill="{t["muted"]}">{e(k)}</text>')
-        b.append(f'<text x="{x:.1f}" y="60" font-size="18" font-weight="600" fill="{t["fg"]}">{e(v)}</text>')
-    return svg(h, "".join(b), "At a glance: " + ", ".join(f"{k}: {v}" for k, v in GLANCE), t)
+    for i, (k, v) in enumerate(ABOUT):
+        y = 40 + i * 34
+        b.append(f'<text x="24" y="{y}" font-size="12" fill="{t["muted"]}">{e(k)}</text>'
+                 f'<text x="110" y="{y}" font-size="15" font-weight="600" fill="{t["fg"]}">{e(v)}</text>')
+    b.append(f'<line x1="330" x2="330" y1="20" y2="{h - 20}" stroke="{t["line"]}"/>')
+    b.append(f'<text x="356" y="40" font-size="12" fill="{t["muted"]}">Skills</text>')
+    x, y = 356, 56
+    for it in SKILLS:
+        w = width(it, 13, True) + 22
+        if x + w > W - 24:
+            x, y = 356, y + 34
+        b.append(f'<rect x="{x:.0f}" y="{y}" width="{w:.0f}" height="26" rx="13" fill="{t["topic_bg"]}"/>'
+                 f'<text x="{x + w / 2:.0f}" y="{y + 18}" text-anchor="middle" font-size="13" font-weight="500" fill="{t["topic_fg"]}">{e(it)}</text>')
+        x += w + 8
+    return svg(h, "".join(b), "; ".join(f"{k}: {v}" for k, v in ABOUT) + ". Skills: " + ", ".join(SKILLS), t)
+
+
+def icon(kind, x, y, c):
+    st = f'fill="none" stroke="{c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"'
+    return {
+        "book": f'<path d="M{x} {y + 3}q7-3 13 0v17q-6-3-13 0zM{x + 13} {y + 3}q6-3 13 0v17q-7-3-13 0z" {st}/>',
+        "flag": f'<path d="M{x + 3} {y + 24}V{y + 1}M{x + 3} {y + 2}h17l-4 6 4 6H{x + 3}" {st}/>',
+        "star": f'<path d="M{x + 13} {y}l3.8 8 8.7 1-6.4 6 1.7 8.6L{x + 13} {y + 19.4}l-7.8 4.2 1.7-8.6-6.4-6 8.7-1z" {st}/>',
+        "sigma": f'<path d="M{x + 22} {y + 2}H{x + 3}l10 11-10 11h19" {st}/>',
+    }[kind]
 
 
 def now(t):
-    head, row = 46, 62
-    h = head + row * len(NOW)
-    b = [f'<path d="M.5 6.5a6 6 0 0 1 6-6h{W - 13}a6 6 0 0 1 6 6V{head}H.5z" fill="{t["sub"]}"/>',
-         f'<line x1="0" x2="{W}" y1="{head}" y2="{head}" stroke="{t["line"]}"/>',
-         f'<circle cx="25" cy="23" r="6.5" fill="none" stroke="{t["fg"]}" stroke-width="1.5"/><circle cx="25" cy="23" r="1.6" fill="{t["fg"]}"/>',
-         f'<text x="42" y="28" font-size="14" font-weight="600" fill="{t["fg"]}">{len(NOW)} In progress</text>',
-         ]
-    for i, (title, lab, col, desc) in enumerate(NOW):
-        y = head + i * row
-        if i:
-            b.append(f'<line x1="0" x2="{W}" y1="{y}" y2="{y}" stroke="{t["line"]}"/>')
-        b.append(f'<circle cx="25" cy="{y + 24}" r="6.5" fill="none" stroke="{t["open"]}" stroke-width="1.5"/>'
-                 f'<circle cx="25" cy="{y + 24}" r="1.6" fill="{t["open"]}"/>')
-        b.append(f'<text x="42" y="{y + 29}" font-size="16" font-weight="600" fill="{t["fg"]}">{e(title)}</text>')
-        fg, bg = t["labels"][col]
-        lx = 42 + width(title, 16, True) + 10
-        lw = width(lab, 12, True) + 16
-        b.append(f'<rect x="{lx:.0f}" y="{y + 15}" width="{lw:.0f}" height="20" rx="10" fill="{bg}" stroke="{fg}" stroke-opacity=".5"/>'
-                 f'<text x="{lx + lw / 2:.0f}" y="{y + 29}" text-anchor="middle" font-size="12" font-weight="600" fill="{fg}">{e(lab)}</text>')
-        b.append(f'<text x="42" y="{y + 50}" font-size="13" fill="{t["muted"]}">{e(desc)}</text>')
-    return svg(h, "".join(b), "What I'm working on now: " + "; ".join(n[0] for n in NOW), t)
-
-
-def skills(t):
-    row = 44
-    h = 16 + row * len(SKILLS) + 4
+    h, n, gap = 166, len(NOW), 12
+    tw = (W - 2 * 20 - gap * (n - 1)) / n
     b = []
-    for i, (group, items) in enumerate(SKILLS):
-        y = 16 + i * row
-        if i:
-            b.append(f'<line x1="20" x2="{W - 20}" y1="{y - 2}" y2="{y - 2}" stroke="{t["line"]}" stroke-opacity=".7"/>')
-        b.append(f'<text x="20" y="{y + 25}" font-size="14" font-weight="600" fill="{t["fg"]}">{e(group)}</text>')
-        x = 200
-        for it in items:
-            w = width(it, 13, True) + 22
-            b.append(f'<rect x="{x:.0f}" y="{y + 7}" width="{w:.0f}" height="26" rx="13" fill="{t["topic_bg"]}"/>'
-                     f'<text x="{x + w / 2:.0f}" y="{y + 25}" text-anchor="middle" font-size="13" font-weight="500" fill="{t["topic_fg"]}">{e(it)}</text>')
-            x += w + 8
-    return svg(h, "".join(b), "Skills: " + "; ".join(f"{g}: {', '.join(i)}" for g, i in SKILLS), t)
+    for i, (ic, kind, title, cap, col) in enumerate(NOW):
+        x = 20 + i * (tw + gap)
+        fg, bg = t["labels"][col]
+        b.append(f'<rect x="{x:.1f}" y="20" width="{tw:.1f}" height="{h - 40}" rx="6" fill="{bg}" fill-opacity=".55" stroke="{fg}" stroke-opacity=".35"/>')
+        b.append(f'<rect x="{x + 16:.1f}" y="36" width="40" height="40" rx="20" fill="{bg}" stroke="{fg}" stroke-opacity=".5"/>')
+        b.append(icon(ic, x + 23.5, 44, fg))
+        b.append(f'<text x="{x + 68:.1f}" y="61" font-size="11.5" font-weight="600" fill="{fg}" letter-spacing=".6">{e(kind.upper())}</text>')
+        b.append(f'<text x="{x + 16:.1f}" y="108" font-size="16" font-weight="600" fill="{t["fg"]}">{e(title)}</text>')
+        b.append(f'<text x="{x + 16:.1f}" y="130" font-size="13" fill="{t["muted"]}">{e(cap)}</text>')
+    return svg(h, "".join(b), "Working on now: " + "; ".join(f"{n[2]} ({n[3]})" for n in NOW), t)
 
 
 if __name__ == "__main__":
     out = sys.argv[1]
     os.makedirs(out, exist_ok=True)
-    for name, fn in [("glance", glance), ("now", now), ("skills", skills)]:
+    for name, fn in [("profile", profile), ("now", now)]:
         for theme, t in THEMES.items():
             open(os.path.join(out, f"{name}-{theme}.svg"), "w").write(fn(t))
     print("ok")
