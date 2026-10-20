@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 368" width="1000" height="368" role="img" aria-label="Skills: LANGUAGES: Python, Java; PYTHON LIBRARIES: NumPy, pandas, Matplotlib, scikit-learn; CS FOUNDATIONS: OOP with Java, Data Structures, Algorithms; SCIENTIFIC WRITING: LaTeX, Overleaf">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0f1e"/>
+      <stop offset="0.55" stop-color="#0f1a33"/>
+      <stop offset="1" stop-color="#0b2a2c"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity="0.045" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2dd4bf" stop-opacity="0"/>
+      <stop offset=".5" stop-color="#2dd4bf" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#2dd4bf" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="clip"><rect width="1000" height="368" rx="18"/></clipPath>
+  </defs>
+  <style>
+    .chip { animation: pop .6s cubic-bezier(.2,.8,.2,1.2) forwards; }
+    @keyframes pop { from { transform: translateY(10px); } to { transform: none; } }
+    .dot { animation: glow 2.4s ease-in-out infinite; }
+    @keyframes glow { 0%,100% { opacity: .45; } 50% { opacity: 1; } }
+    .scan { animation: scan 4s ease-in-out infinite; }
+    @keyframes scan { 0% { transform: translateX(-300px); } 100% { transform: translateX(1000px); } }
+  </style>
+  <g clip-path="url(#clip)" font-family="'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Inter, Arial, sans-serif">
+    <rect width="1000" height="368" rx="18" fill="url(#bg)"/><rect width="1000" height="368" rx="18" fill="url(#grid)"/><rect x="0.5" y="0.5" width="999" height="367" rx="17.5" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
+    <rect class="scan" x="0" y="0" width="300" height="2" fill="url(#sweep)"/>
+    <text x="44" y="56" font-size="24" font-weight="800" fill="#e6edf3">Toolbox</text>
+    <text x="162" y="56" font-family="'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, 'DejaVu Sans Mono', 'Courier New', monospace" font-size="14" fill="#8b9bb4">// what I build with</text>
+    <text x="44" y="117" font-family="'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, 'DejaVu Sans Mono', 'Courier New', monospace" font-size="12.5" fill="#2dd4bf" letter-spacing="1.6">LANGUAGES</text>
+      <g class="chip" style="animation-delay:0.15s">
+        <rect x="270" y="92" width="107" height="38" rx="19" fill="#2dd4bf" fill-opacity=".10" stroke="#2dd4bf" stroke-opacity=".55"/>
+        <circle cx="290" cy="111" r="4.5" fill="#2dd4bf" class="dot" style="animation-delay:0.0s"/>
+        <text x="304" y="117" font-size="16" font-weight="600" fill="#e6edf3">Python</text>
+      </g>
+      <g class="chip" style="animation-delay:0.23s">
+        <rect x="389" y="92" width="92" height="38" rx="19" fill="#2dd4bf" fill-opacity=".10" stroke="#2dd4bf" stroke-opacity=".55"/>
+        <circle cx="409" cy="111" r="4.5" fill="#2dd4bf" class="dot" style="animation-delay:0.3s"/>
+        <text x="423" y="117" font-size="16" font-weight="600" fill="#e6edf3">Java</text>
+      </g><line x1="44" y1="148" x2="956" y2="148" stroke="#ffffff" stroke-opacity=".06"/><text x="44" y="181" font-family="'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, 'DejaVu Sans Mono', 'Courier New', monospace" font-size="12.5" fill="#60a5fa" letter-spacing="1.6">PYTHON LIBRARIES</text>
+      <g class="chip" style="animation-delay:0.31s">
+        <rect x="270" y="156" width="108" height="38" rx="19" fill="#60a5fa" fill-opacity=".10" stroke="#60a5fa" stroke-opacity=".55"/>
+        <circle cx="290" cy="175" r="4.5" fill="#60a5fa" class="dot" style="animation-delay:0.6s"/>
+        <text x="304" y="181" font-size="16" font-weight="600" fill="#e6edf3">NumPy</text>
+      </g>
+      <g class="chip" style="animation-delay:0.39s">
+        <rect x="390" y="156" width="109" height="38" rx="19" fill="#60a5fa" fill-opacity=".10" stroke="#60a5fa" stroke-opacity=".55"/>
+        <circle cx="410" cy="175" r="4.5" fill="#60a5fa" class="dot" style="animation-delay:0.9s"/>
+        <text x="424" y="181" font-size="16" font-weight="600" fill="#e6edf3">pandas</text>
+      </g>
+      <g class="chip" style="animation-delay:0.47s">
+        <rect x="511" y="156" width="132" height="38" rx="19" fill="#60a5fa" fill-opacity=".10" stroke="#60a5fa" stroke-opacity=".55"/>
+        <circle cx="531" cy="175" r="4.5" fill="#60a5fa" class="dot" style="animation-delay:1.2s"/>
+        <text x="545" y="181" font-size="16" font-weight="600" fill="#e6edf3">Matplotlib</text>
+      </g>
+      <g class="chip" style="animation-delay:0.55s">
+        <rect x="655" y="156" width="150" height="38" rx="19" fill="#60a5fa" fill-opacity=".10" stroke="#60a5fa" stroke-opacity=".55"/>
+        <circle cx="675" cy="175" r="4.5" fill="#60a5fa" class="dot" style="animation-delay:1.5s"/>
+        <text x="689" y="181" font-size="16" font-weight="600" fill="#e6edf3">scikit-learn</text>
+      </g><line x1="44" y1="212" x2="956" y2="212" stroke="#ffffff" stroke-opacity=".06"/><text x="44" y="245" font-family="'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, 'DejaVu Sans Mono', 'Courier New', monospace" font-size="12.5" fill="#a78bfa" letter-spacing="1.6">CS FOUNDATIONS</text>
+      <g class="chip" style="animation-delay:0.63s">
+        <rect x="270" y="220" width="171" height="38" rx="19" fill="#a78bfa" fill-opacity=".10" stroke="#a78bfa" stroke-opacity=".55"/>
+        <circle cx="290" cy="239" r="4.5" fill="#a78bfa" class="dot" style="animation-delay:1.8s"/>
+        <text x="304" y="245" font-size="16" font-weight="600" fill="#e6edf3">OOP with Java</text>
+      </g>
+      <g class="chip" style="animation-delay:0.71s">
+        <rect x="453" y="220" width="182" height="38" rx="19" fill="#a78bfa" fill-opacity=".10" stroke="#a78bfa" stroke-opacity=".55"/>
+        <circle cx="473" cy="239" r="4.5" fill="#a78bfa" class="dot" style="animation-delay:2.1s"/>
+        <text x="487" y="245" font-size="16" font-weight="600" fill="#e6edf3">Data Structures</text>
+      </g>
+      <g class="chip" style="animation-delay:0.79s">
+        <rect x="647" y="220" width="142" height="38" rx="19" fill="#a78bfa" fill-opacity=".10" stroke="#a78bfa" stroke-opacity=".55"/>
+        <circle cx="667" cy="239" r="4.5" fill="#a78bfa" class="dot" style="animation-delay:2.4s"/>
+        <text x="681" y="245" font-size="16" font-weight="600" fill="#e6edf3">Algorithms</text>
+      </g><line x1="44" y1="276" x2="956" y2="276" stroke="#ffffff" stroke-opacity=".06"/><text x="44" y="309" font-family="'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, 'DejaVu Sans Mono', 'Courier New', monospace" font-size="12.5" fill="#fbbf24" letter-spacing="1.6">SCIENTIFIC WRITING</text>
+      <g class="chip" style="animation-delay:0.87s">
+        <rect x="270" y="284" width="105" height="38" rx="19" fill="#fbbf24" fill-opacity=".10" stroke="#fbbf24" stroke-opacity=".55"/>
+        <circle cx="290" cy="303" r="4.5" fill="#fbbf24" class="dot" style="animation-delay:2.7s"/>
+        <text x="304" y="309" font-size="16" font-weight="600" fill="#e6edf3">LaTeX</text>
+      </g>
+      <g class="chip" style="animation-delay:0.95s">
+        <rect x="387" y="284" width="122" height="38" rx="19" fill="#fbbf24" fill-opacity=".10" stroke="#fbbf24" stroke-opacity=".55"/>
+        <circle cx="407" cy="303" r="4.5" fill="#fbbf24" class="dot" style="animation-delay:3.0s"/>
+        <text x="421" y="309" font-size="16" font-weight="600" fill="#e6edf3">Overleaf</text>
+      </g>
+  </g>
+</svg>

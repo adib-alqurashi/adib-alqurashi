@@ -1,34 +1,46 @@
-# Hi, I'm Adeeb Alqurashi
+<p align="center">
+  <img src="assets/header.svg" width="100%" alt="Adeeb Alqurashi — Data Science Student at KFUPM" />
+</p>
 
-Third-year Data Science student at King Fahd University of Petroleum & Minerals (KFUPM).
+<p align="center">
+  <img src="assets/typing.svg" alt="Third-year Data Science student at KFUPM | Turning mathematics into useful projects | KAUST Academy · Stage 1 | Python · Java · DSA · LaTeX" />
+</p>
 
-I'm interested in research, mathematics, and turning what I learn into useful projects. I'm working toward a future in academic research.
+<p align="center">
+  <a href="mailto:adib.alqurashi@gmail.com"><img src="assets/btn-email.svg" alt="Email" /></a>&nbsp;
+  <a href="https://www.linkedin.com/in/adib-alqurashi-347527444"><img src="assets/btn-linkedin.svg" alt="LinkedIn" /></a>&nbsp;
+  <a href="https://x.com/adib_alqurashi"><img src="assets/btn-x.svg" alt="X @adib_alqurashi" /></a>
+</p>
 
-## Currently
+<br />
 
-- Studying Introduction to Data Science.
-- Working on a Kaggle competition.
-- Studying in Stage 1 of KAUST Academy.
-- Preparing for mathematics competitions.
+<p align="center">
+  I'm a third-year <b>Data Science</b> student at <b>King Fahd University of Petroleum &amp; Minerals (KFUPM)</b>.<br />
+  I'm interested in research and mathematics, and in turning what I learn into useful projects.<br />
+  I'm working toward a future in academic research.<br />
+  On campus, I contribute to the <b>DSE</b> and <b>Computer Clubs</b> through applied projects and growth &amp; development committee work.
+</p>
 
-## Campus involvement
+<br />
 
-Contributing to the DSE and Computer Clubs through applied projects and growth and development committee work.
+<p align="center">
+  <img src="assets/about.svg" width="100%" alt="Education: KFUPM, B.S. in Data Science, third year, DSE and Computer Clubs. Currently: studying Introduction to Data Science; competing in a Kaggle competition; Stage 1 of KAUST Academy; preparing for mathematics competitions." />
+</p>
 
-## Here on GitHub
+<p align="center">
+  <img src="assets/skills.svg" width="100%" alt="Skills. Languages: Python, Java. Python libraries: NumPy, pandas, Matplotlib, scikit-learn. CS foundations: OOP with Java, Data Structures, Algorithms. Scientific writing: LaTeX, Overleaf." />
+</p>
 
-Sharing projects, experiments, and notes as I develop my skills in data science and programming.
+<h3 align="center">Contribution activity</h3>
 
-## Activity
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/github-snake-dark.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/github-snake.svg" />
+    <img alt="Adeeb's contribution graph" src="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/github-snake.svg" width="100%" />
+  </picture>
+</p>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/github-snake-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/github-snake.svg" />
-  <img alt="Adeeb's contribution graph" src="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/github-snake.svg" />
-</picture>
-
----
-
-"I have limits. What I create will go beyond them."
-
-reach at [adib.alqurashi@gmail.com](mailto:adib.alqurashi@gmail.com)
+<p align="center">
+  <img src="assets/footer.svg" width="100%" alt="“I have limits. What I create will go beyond them.” — Adeeb Alqurashi" />
+</p>
