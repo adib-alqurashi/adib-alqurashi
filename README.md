@@ -1,33 +1,32 @@
-# Hi, I’m Adeeb Alqurashi
+name: Generate contribution graph
 
-Third-year Data Science student at King Fahd University of Petroleum & Minerals (KFUPM).
+on:
+  schedule:
+    - cron: "0 0 * * *"   # every day
+  workflow_dispatch:       # lets you run it manually
+  push:
+    branches: [main]
 
-I’m interested in research, mathematics, and turning what I learn into useful projects. I’m working toward a future in academic research.
+permissions:
+  contents: write
 
-## Currently
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Platane/snk/svg-only@v3
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          outputs: |
+            dist/github-snake.svg
+            dist/github-snake-dark.svg?palette=github-dark
 
-- Studying Introduction to Data Science.
-- Working on a Kaggle competition.
-- Studying in Stage 1 of KAUST Academy.
-- Preparing for mathematics competitions.
-
-## Campus involvement
-
-Contributing to the DSE and Computer Clubs through applied projects and growth and development committee work.
-
-## Here on GitHub
-
-Sharing projects, experiments, and notes as I develop my skills in data science and programming.
-
----
-
-## Activity
-
-[![Adeeb's GitHub activity graph](https://github-readme-activity-graph.vercel.app/graph?username=adib-alqurashi&theme=github-compact&hide_border=true&custom_title=Recent%20Activity)](https://github.com/Ashutosh00710/github-readme-activity-graph)
-
-
-
-
-“I have limits. What I create will go beyond them.”
-
-reach at adib.alqurashi@gmail.com
+      - name: Push to output branch
+        run: |
+          cd dist
+          git init -b output
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update contribution graph"
+          git push --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" output
