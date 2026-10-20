@@ -34,34 +34,49 @@ def from_calendar(data):
     return {d["date"]: d["contributionCount"] for w in cal["weeks"] for d in w["contributionDays"]}
 
 
-def from_commits():
-    since = (DAYS[0] - dt.timedelta(days=1)).isoformat()
-    seen = {}
+def get_all(url, pages=10):
+    items = []
+    for page in range(1, pages + 1):
+        try:
+            r = api(f"{url}{'&' if '?' in url else '?'}per_page=100&page={page}")
+        except urllib.error.HTTPError:
+            break  # empty repo, no access, etc.
+        items += r
+        if len(r) < 100:
+            break
+    return items
 
-    def add(sha, date):
-        if sha and date:
-            seen[sha] = dt.datetime.fromisoformat(date.replace("Z", "+00:00")).astimezone(TZ).date().isoformat()
+
+def from_public_activity():
+    """Count what GitHub counts, from public repos: commits, opened issues/PRs, and PR reviews."""
+    since = DAYS[0] - dt.timedelta(days=1)
+    first = DAYS[0].isoformat()
+
+    def day(ts):
+        return dt.datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone(TZ).date().isoformat()
 
     repos = []
-    for url in [f"https://api.github.com/users/{user}/repos?per_page=100&type=owner"] + \
-               [f"https://api.github.com/orgs/{o}/repos?per_page=100" for o in ORGS]:
-        try:
-            repos += [r["full_name"] for r in api(url) if not r.get("fork")]  # GitHub doesn't count forks
-        except urllib.error.HTTPError:
-            pass
+    for url in [f"https://api.github.com/users/{user}/repos?type=owner"] + \
+               [f"https://api.github.com/orgs/{o}/repos?type=all" for o in ORGS]:
+        repos += [r["full_name"] for r in get_all(url, 3) if not r.get("fork")]  # GitHub doesn't count forks
+    events = {}  # unique key -> day
     for full in repos:
-        for page in range(1, 11):
-            try:
-                r = api(f"https://api.github.com/repos/{full}/commits?author={user}&since={since}T00:00:00Z&per_page=100&page={page}")
-            except urllib.error.HTTPError:
-                break  # empty repo, no access, etc.
-            for c in r:
-                add(c["sha"], c["commit"]["author"]["date"])
-            if len(r) < 100:
-                break
+        base = f"https://api.github.com/repos/{full}"
+        for c in get_all(f"{base}/commits?author={user}&since={since.isoformat()}T00:00:00Z"):
+            events["c" + c["sha"]] = day(c["commit"]["author"]["date"])
+        for it in get_all(f"{base}/issues?state=all&creator={user}"):
+            events[f"i{full}#{it['number']}"] = day(it["created_at"])
+        for pr in get_all(f"{base}/pulls?state=all", 3):
+            if pr["updated_at"][:10] < first:
+                continue
+            reviews = [rv for rv in get_all(f"{base}/pulls/{pr['number']}/reviews", 2)
+                       if (rv.get("user") or {}).get("login", "").lower() == user.lower() and rv.get("submitted_at")]
+            if reviews and (pr.get("user") or {}).get("login", "").lower() != user.lower():
+                events[f"r{full}#{pr['number']}"] = day(min(rv["submitted_at"] for rv in reviews))
     counts = {}
-    for day in seen.values():
-        counts[day] = counts.get(day, 0) + 1
+    for d in events.values():
+        if d >= first:
+            counts[d] = counts.get(d, 0) + 1
     return counts
 
 
@@ -98,7 +113,7 @@ else:
         except Exception:
             counts = {}
     if not sum(counts.values()):
-        counts, unit, source = from_commits(), "commits", "commits"
+        counts, source = from_public_activity(), "public"
 
 series = [counts.get(d.isoformat(), 0) for d in DAYS]
 total = sum(series)
