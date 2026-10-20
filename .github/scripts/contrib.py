@@ -1,7 +1,7 @@
-"""Render the last 12 months of contributions as a plain grid of days (no year shown).
+"""Draw the last 12 months of contributions as a GitHub-style grid (no year shown).
 
 Usage: python contrib.py <github-user> <out.svg> [calendar.json]
-Reads GITHUB_TOKEN from the environment when no calendar.json is given.
+THEME=light|dark (default dark). Reads GITHUB_TOKEN when no calendar.json is given.
 """
 import datetime as dt
 import json
@@ -25,45 +25,46 @@ else:
     data = json.load(urllib.request.urlopen(req))
 cal = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]
 
-MONO = "'JetBrains Mono','SFMono-Regular',Consolas,'DejaVu Sans Mono','Courier New',monospace"
+FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif"
 THEMES = {
-    "dark": dict(bg="#0d1117", line="#30363d", text="#8b949e", title="#ffffff",
-                 levels=["#161b22", "#3d444d", "#6e7681", "#b1bac4", "#ffffff"]),
-    "light": dict(bg="#ffffff", line="#d0d7de", text="#59636e", title="#1f2328",
-                  levels=["#ebedf0", "#c4c9cf", "#8c959f", "#57606a", "#1f2328"]),
+    "dark": dict(bg="#0d1117", line="#3d444d", fg="#f0f6fc", muted="#9198a1",
+                 levels=["#151b23", "#033a16", "#196c2e", "#2ea043", "#56d364"]),
+    "light": dict(bg="#ffffff", line="#d1d9e0", fg="#1f2328", muted="#59636e",
+                  levels=["#eff2f5", "#aceebb", "#4ac26b", "#2da44e", "#116329"]),
 }
 T = THEMES[os.environ.get("THEME", "dark")]
 LEVEL = dict(zip(["NONE", "FIRST_QUARTILE", "SECOND_QUARTILE", "THIRD_QUARTILE", "FOURTH_QUARTILE"], T["levels"]))
-W, H = 1000, 240
-X0, Y0, STEP, CELL = 100, 84, 16, 12
+
+W, H = 880, 206
+X0, Y0, STEP, CELL = 58, 66, 14.5, 11
 
 cells, months, last_month, last_label = [], [], None, -9
 for wi, week in enumerate(cal["weeks"]):
     for d in week["contributionDays"]:
         x, y = X0 + wi * STEP, Y0 + d["weekday"] * STEP
         fill = LEVEL.get(d["contributionLevel"], LEVEL["NONE"])
-        accent = ' stroke="#f0605a" stroke-width="1"' if d["date"] == week["contributionDays"][-1]["date"] and wi == len(cal["weeks"]) - 1 else ""
-        cells.append(f'<rect x="{x}" y="{y}" width="{CELL}" height="{CELL}" rx="1.5" fill="{fill}"{accent}><title>{d["contributionCount"]} on {dt.date.fromisoformat(d["date"]).strftime("%b %d")}</title></rect>')
+        day = dt.date.fromisoformat(d["date"])
+        cells.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{CELL}" height="{CELL}" rx="2" fill="{fill}">'
+                     f'<title>{d["contributionCount"]} contributions on {day.strftime("%B %d")}</title></rect>')
     m = dt.date.fromisoformat(week["contributionDays"][0]["date"]).month
-    if m != last_month and wi < len(cal["weeks"]) - 2 and (not months or wi - last_label >= 3):
+    if m != last_month and wi < len(cal["weeks"]) - 2 and wi - last_label >= 3:
         last_label = wi
-        months.append(f'<text x="{X0 + wi * STEP}" y="{Y0 - 12}">{dt.date(2000, m, 1).strftime("%b").upper()}</text>')
+        months.append(f'<text x="{X0 + wi * STEP:.1f}" y="{Y0 - 8}">{dt.date(2000, m, 1).strftime("%b")}</text>')
     last_month = m
 
-days = "".join(f'<text x="{X0 - 12}" y="{Y0 + i * STEP + 10}" text-anchor="end">{n}</text>' for i, n in [(1, "MON"), (3, "WED"), (5, "FRI")])
-legend = "".join(f'<rect x="{852 + i * 16}" y="204" width="{CELL}" height="{CELL}" rx="1.5" fill="{c}"/>' for i, c in enumerate(LEVEL.values()))
+days = "".join(f'<text x="{X0 - 8}" y="{Y0 + i * STEP + 10:.1f}" text-anchor="end">{n}</text>'
+               for i, n in [(1, "Mon"), (3, "Wed"), (5, "Fri")])
+legend = "".join(f'<rect x="{762 + i * 14.5:.1f}" y="{H - 30}" width="{CELL}" height="{CELL}" rx="2" fill="{c}"/>'
+                 for i, c in enumerate(LEVEL.values()))
+total = cal["totalContributions"]
 
-svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="Contribution activity, last 12 months: {cal['totalContributions']} contributions">
-<rect width="{W}" height="{H}" fill="{T['bg']}"/>
-<rect x="24.5" y="12.5" width="952" height="{H - 25}" fill="none" stroke="{T['line']}"/>
-<g font-family="{MONO}" font-size="12.5" fill="{T['text']}" letter-spacing="1">
-<text x="40" y="40" fill="{T['title']}" font-size="13" font-weight="700" letter-spacing="1.5">ACTIVITY / LAST 12 MONTHS</text>
-<text x="960" y="40" text-anchor="end"><tspan fill="{T['title']}" font-weight="700">{cal['totalContributions']}</tspan>  CONTRIBUTIONS</text>
-{''.join(months)}{days}
-<text x="846" y="215" text-anchor="end">LESS</text><text x="940" y="215" text-anchor="start">MORE</text>
-</g>
+svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" font-family="{FONT}" role="img" aria-label="{total} contributions in the last 12 months">
+<rect x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="6" fill="{T['bg']}" stroke="{T['line']}"/>
+<text x="20" y="30" font-size="15" font-weight="600" fill="{T['fg']}">{total} contributions in the last 12 months</text>
+<g font-size="12" fill="{T['muted']}">{''.join(months)}{days}
+<text x="754" y="{H - 20}" text-anchor="end">Less</text><text x="{762 + 5 * 14.5 + 4:.1f}" y="{H - 20}">More</text></g>
 {''.join(cells)}{legend}
 </svg>"""
 os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
 open(out, "w").write(svg)
-print("wrote", out, cal["totalContributions"])
+print("wrote", out, total)
