@@ -24,6 +24,10 @@ else:
     )
     data = json.load(urllib.request.urlopen(req))
 cal = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]
+if cal["totalContributions"] == 0:
+    # A private profile hides contributions from tokens that aren't yours.
+    # Fail instead of publishing an empty chart; see CONTRIB_TOKEN in the workflow.
+    sys.exit("No contributions visible to this token (private profile?). Add a CONTRIB_TOKEN secret.")
 
 FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif"
 THEMES = {
