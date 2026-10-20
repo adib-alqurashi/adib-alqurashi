@@ -47,14 +47,15 @@ def from_commits():
         except urllib.error.HTTPError:
             break
         for it in r.get("items", []):
-            add(it["sha"], it["commit"]["author"]["date"])
+            if not it.get("repository", {}).get("fork"):
+                add(it["sha"], it["commit"]["author"]["date"])
         if len(r.get("items", [])) < 100:
             break
     repos = []
     for url in [f"https://api.github.com/users/{user}/repos?per_page=100&type=owner"] + \
                [f"https://api.github.com/orgs/{o}/repos?per_page=100" for o in ORGS]:
         try:
-            repos += [r["full_name"] for r in api(url)]
+            repos += [r["full_name"] for r in api(url) if not r.get("fork")]  # GitHub doesn't count forks
         except urllib.error.HTTPError:
             pass
     for full in repos:
