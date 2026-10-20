@@ -1,21 +1,42 @@
-<p align="center">
-  <img src="assets/hero.svg" width="100%" alt="Adeeb Alqurashi — Data Science Student at KFUPM. Research, Mathematics, Machine Learning." />
-</p>
+# Hi, I'm Adeeb Alqurashi
 
-<p align="center">
-  <a href="mailto:adib.alqurashi@gmail.com"><code>EMAIL</code></a>&nbsp;&nbsp;
-  <a href="https://www.linkedin.com/in/adib-alqurashi-347527444"><code>LINKEDIN</code></a>&nbsp;&nbsp;
-  <a href="https://x.com/adib_alqurashi"><code>X</code></a>
-</p>
+Third-year **Data Science** student at **KFUPM** (King Fahd University of Petroleum & Minerals).
+Interested in research, mathematics, and turning what I learn into useful projects.
 
-<p align="center">
-  <img src="assets/panels.svg" width="100%" alt="Currently: Introduction to Data Science, Kaggle competition, KAUST Academy Stage 1, mathematics competitions. Education: KFUPM, B.S. Data Science, year 3. Skills: Python, Java, NumPy, pandas, Matplotlib, scikit-learn, OOP with Java, Data Structures, Algorithms, LaTeX, Overleaf." />
-</p>
+[Email](mailto:adib.alqurashi@gmail.com) · [LinkedIn](https://www.linkedin.com/in/adib-alqurashi-347527444) · [X](https://x.com/adib_alqurashi)
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/contrib.svg" width="100%" alt="Contribution activity, last 12 months" />
-</p>
+```python
+class Adeeb:
+    name       = "Adeeb Alqurashi"
+    university = "King Fahd University of Petroleum & Minerals (KFUPM)"
+    major      = "Data Science, B.S. (3rd year)"
+    interests  = ["Research", "Mathematics", "Machine Learning"]
+    goal       = "A future in academic research"
 
-<p align="center">
-  <img src="assets/footer.svg" width="100%" alt="“I have limits. What I create will go beyond them.” — Adeeb Alqurashi" />
-</p>
+    currently = [
+        "Studying Introduction to Data Science",
+        "Competing in a Kaggle competition",
+        "Stage 1 of KAUST Academy",
+        "Preparing for mathematics competitions",
+    ]
+
+    skills = {
+        "languages":   ["Python", "Java"],
+        "python_libs": ["NumPy", "pandas", "Matplotlib", "scikit-learn"],
+        "cs_core":     ["OOP with Java", "Data Structures", "Algorithms"],
+        "writing":     ["LaTeX", "Overleaf"],
+    }
+
+    campus = "DSE & Computer Clubs: applied projects, growth & development committee"
+
+    def motto(self):
+        return "I have limits. What I create will go beyond them."
+```
+
+### Contribution activity
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/contrib.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/contrib-light.svg" />
+  <img alt="Contribution activity, last 12 months" src="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/contrib.svg" width="100%" />
+</picture>

@@ -26,8 +26,14 @@ else:
 cal = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]
 
 MONO = "'JetBrains Mono','SFMono-Regular',Consolas,'DejaVu Sans Mono','Courier New',monospace"
-LEVEL = {"NONE": "#161b22", "FIRST_QUARTILE": "#3d444d", "SECOND_QUARTILE": "#6e7681",
-         "THIRD_QUARTILE": "#b1bac4", "FOURTH_QUARTILE": "#ffffff"}
+THEMES = {
+    "dark": dict(bg="#0d1117", line="#30363d", text="#8b949e", title="#ffffff",
+                 levels=["#161b22", "#3d444d", "#6e7681", "#b1bac4", "#ffffff"]),
+    "light": dict(bg="#ffffff", line="#d0d7de", text="#59636e", title="#1f2328",
+                  levels=["#ebedf0", "#c4c9cf", "#8c959f", "#57606a", "#1f2328"]),
+}
+T = THEMES[os.environ.get("THEME", "dark")]
+LEVEL = dict(zip(["NONE", "FIRST_QUARTILE", "SECOND_QUARTILE", "THIRD_QUARTILE", "FOURTH_QUARTILE"], T["levels"]))
 W, H = 1000, 240
 X0, Y0, STEP, CELL = 100, 84, 16, 12
 
@@ -48,11 +54,11 @@ days = "".join(f'<text x="{X0 - 12}" y="{Y0 + i * STEP + 10}" text-anchor="end">
 legend = "".join(f'<rect x="{852 + i * 16}" y="204" width="{CELL}" height="{CELL}" rx="1.5" fill="{c}"/>' for i, c in enumerate(LEVEL.values()))
 
 svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="Contribution activity, last 12 months: {cal['totalContributions']} contributions">
-<rect width="{W}" height="{H}" fill="#0d1117"/>
-<rect x="24.5" y="12.5" width="952" height="{H - 25}" fill="none" stroke="#30363d"/>
-<g font-family="{MONO}" font-size="12.5" fill="#8b949e" letter-spacing="1">
-<text x="40" y="40" fill="#ffffff" font-size="13" font-weight="700" letter-spacing="1.5">ACTIVITY / LAST 12 MONTHS</text>
-<text x="960" y="40" text-anchor="end"><tspan fill="#ffffff" font-weight="700">{cal['totalContributions']}</tspan>  CONTRIBUTIONS</text>
+<rect width="{W}" height="{H}" fill="{T['bg']}"/>
+<rect x="24.5" y="12.5" width="952" height="{H - 25}" fill="none" stroke="{T['line']}"/>
+<g font-family="{MONO}" font-size="12.5" fill="{T['text']}" letter-spacing="1">
+<text x="40" y="40" fill="{T['title']}" font-size="13" font-weight="700" letter-spacing="1.5">ACTIVITY / LAST 12 MONTHS</text>
+<text x="960" y="40" text-anchor="end"><tspan fill="{T['title']}" font-weight="700">{cal['totalContributions']}</tspan>  CONTRIBUTIONS</text>
 {''.join(months)}{days}
 <text x="846" y="215" text-anchor="end">LESS</text><text x="940" y="215" text-anchor="start">MORE</text>
 </g>
