@@ -1,4 +1,4 @@
-"""Daily activity for the last 12 months as a simple bar chart: one bar per day, no year shown.
+"""Daily activity for the last 12 months as a grid of day blocks (no year shown).
 
 Usage: python contrib.py <github-user> <out.svg> [calendar.json]
 THEME=light|dark (default dark). Uses GITHUB_TOKEN from the environment.
@@ -8,6 +8,7 @@ so then it counts the user's commits in public repositories instead (no extra to
 """
 import datetime as dt
 import json
+import re
 import os
 import sys
 import urllib.error
@@ -64,6 +65,22 @@ def from_commits():
     return counts
 
 
+def from_page():
+    """GitHub's public contributions page (the HTML behind the profile graph)."""
+    req = urllib.request.Request(f"https://github.com/users/{user}/contributions",
+                                 headers={"User-Agent": "Mozilla/5.0 profile-chart"})
+    html = urllib.request.urlopen(req, timeout=30).read().decode()
+    ids = dict(re.findall(r'data-date="(\d{4}-\d{2}-\d{2})"[^>]*?id="([^"]+)"', html))
+    ids.update({d: i for i, d in re.findall(r'id="([^"]+)"[^>]*?data-date="(\d{4}-\d{2}-\d{2})"', html)})
+    tips = dict(re.findall(r'<tool-tip[^>]*?for="([^"]+)"[^>]*>\s*([^<]*)</tool-tip>', html))
+    out = {}
+    for d, i in ids.items():
+        m = re.match(r"(\d+) contribution", tips.get(i, ""))
+        out[d] = int(m.group(1)) if m else 0
+    return out
+
+
+source = "sample"
 if len(sys.argv) > 3:
     counts, unit = from_calendar(json.load(open(sys.argv[3]))), "contributions"
 else:
@@ -72,10 +89,16 @@ else:
         counts = from_calendar(api("https://api.github.com/graphql", {"query": """query($l:String!){ user(login:$l){
           contributionsCollection{ contributionCalendar{ weeks{ contributionDays{ date contributionCount } } } } } }""",
                                                                        "variables": {"l": user}}))
+        source = "api"
     except Exception:
         pass
     if not sum(counts.values()):
-        counts, unit = from_commits(), "commits"
+        try:
+            counts, source = from_page(), "page"
+        except Exception:
+            counts = {}
+    if not sum(counts.values()):
+        counts, unit, source = from_commits(), "commits", "commits"
 
 series = [counts.get(d.isoformat(), 0) for d in DAYS]
 total = sum(series)
@@ -97,18 +120,20 @@ for i, c in enumerate(reversed(series)):
 
 # ------------------------------------------------------------------ draw
 FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif"
-THEMES = {
+THEMES = {  # blue scale ending in the "Intro to Data Science" tile color
     "dark": dict(bg="#0d1117", line="#3d444d", fg="#f0f6fc", muted="#9198a1",
-                 levels=["#033a16", "#196c2e", "#2ea043", "#56d364"]),
+                 levels=["#151b23", "#0d2b52", "#1a5bb5", "#2f7de1", "#4493f8"]),
     "light": dict(bg="#ffffff", line="#d1d9e0", fg="#1f2328", muted="#59636e",
-                  levels=["#aceebb", "#4ac26b", "#2da44e", "#116329"]),
+                  levels=["#eff2f5", "#b6e3ff", "#54aeff", "#218bff", "#0969da"]),
 }
 T = THEMES[os.environ.get("THEME", "dark")]
-W, H = 880, 210
-px0, px1, py0, py1 = 24, W - 24, 58, H - 52
+W, H = 880, 206
+X0, Y0, STEP, CELL = 58, 66, 14.5, 11
 peak = max(series)
-step = (px1 - px0) / len(series)
-bw = max(step * 0.72, 1.2)
+
+
+def level(c):
+    return 0 if not c else 1 + min(3, int(c / peak * 4 - 1e-9))
 
 
 def b(v):
@@ -119,26 +144,31 @@ def days_(n):
     return f"{b(n)} day" + ("" if n == 1 else "s")
 
 
-parts = [f'<line x1="{px0}" x2="{px1}" y1="{py1 + .5}" y2="{py1 + .5}" stroke="{T["line"]}"/>']
-for i, (d, c) in enumerate(zip(DAYS, series)):
-    x = px0 + i * step
-    if d.day == 1 and i < len(DAYS) - 12:
-        parts.append(f'<line x1="{x:.1f}" x2="{x:.1f}" y1="{py1}" y2="{py1 + 5}" stroke="{T["line"]}"/>'
-                     f'<text x="{x:.1f}" y="{py1 + 20}" font-size="12" fill="{T["muted"]}">{d.strftime("%b")}</text>')
-    if c:
-        h = max(4, c / peak * (py1 - py0))
-        col = T["levels"][min(3, int(c / peak * 4 - 1e-9))]
-        parts.append(f'<rect x="{x:.1f}" y="{py1 - h:.1f}" width="{bw:.1f}" height="{h:.1f}" rx="{min(bw / 2, 1.5):.1f}" fill="{col}">'
-                     f'<title>{c} {unit} on {d.strftime("%B %d")}</title></rect>')
+start = DAYS[0] - dt.timedelta(days=(DAYS[0].weekday() + 1) % 7)  # back to Sunday
+cells, months, last_label, last_month = [], [], -9, None
+for d, c in zip(DAYS, series):
+    wi, wd = (d - start).days // 7, (d.weekday() + 1) % 7
+    x, y = X0 + wi * STEP, Y0 + wd * STEP
+    cells.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{CELL}" height="{CELL}" rx="2" fill="{T["levels"][level(c)]}">'
+                 f'<title>{c} {unit} on {d.strftime("%B %d")}</title></rect>')
+    if wd == 0 and d.month != last_month and wi - last_label >= 3 and d < DAYS[-1] - dt.timedelta(days=14):
+        months.append(f'<text x="{x:.1f}" y="{Y0 - 8}">{d.strftime("%b")}</text>')
+        last_label, last_month = wi, d.month
+labels = "".join(f'<text x="{X0 - 8}" y="{Y0 + i * STEP + 10:.1f}" text-anchor="end">{n}</text>'
+                 for i, n in [(1, "Mon"), (3, "Wed"), (5, "Fri")])
+legend = "".join(f'<rect x="{762 + i * 14.5:.1f}" y="{H - 30}" width="{CELL}" height="{CELL}" rx="2" fill="{c}"/>'
+                 for i, c in enumerate(T["levels"]))
 stat_txt = f"{b(active)} active days   ·   Longest streak {days_(longest)}   ·   Current streak {days_(current)}"
 
 svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" font-family="{FONT}" role="img" aria-label="{total} {unit} in the last 12 months">
+<!-- source: {source} -->
 <rect x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="6" fill="{T['bg']}" stroke="{T['line']}"/>
 <text x="20" y="30" font-size="15" font-weight="600" fill="{T['fg']}">{total} {unit} in the last 12 months</text>
 <text x="{W - 20}" y="30" text-anchor="end" font-size="13" fill="{T['muted']}" xml:space="preserve">{stat_txt}</text>
-<text x="20" y="{H - 14}" font-size="12" fill="{T['muted']}">Each bar is one day · taller means more activity</text>
-{''.join(parts)}
+<g font-size="12" fill="{T['muted']}">{''.join(months)}{labels}
+<text x="754" y="{H - 20}" text-anchor="end">Less</text><text x="{762 + 5 * 14.5 + 4:.1f}" y="{H - 20}">More</text></g>
+{''.join(cells)}{legend}
 </svg>"""
 os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
 open(out, "w").write(svg)
-print("wrote", out, total, unit)
+print("wrote", out, total, unit, source)

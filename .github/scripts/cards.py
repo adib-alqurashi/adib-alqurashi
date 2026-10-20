@@ -15,9 +15,9 @@ SKILLS = ["Python", "Java", "NumPy", "pandas", "Matplotlib", "scikit-learn",
           "OOP", "Data structures", "Algorithms", "LaTeX", "Overleaf"]
 NOW = [  # icon, kind, title, caption, color
     ("book", "Course", "Intro to Data Science", "Core course at KFUPM", "blue"),
-    ("flag", "Competition", "Kaggle", "A live ML challenge", "purple"),
-    ("star", "Program", "KAUST Academy", "Stage 1", "green"),
-    ("sigma", "Math", "Competitions", "Preparing now", "orange"),
+    ("flag", "Competition", "Kaggle", "A live ML challenge", "blue"),
+    ("star", "Program", "KAUST Academy", "Stage 1", "blue"),
+    ("sigma", "Math", "Competitions", "Preparing now", "blue"),
 ]
 
 # ------------------------------------------------------------------ THEME

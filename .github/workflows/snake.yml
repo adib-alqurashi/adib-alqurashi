@@ -20,8 +20,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/activity.svg
-          THEME=light python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/activity-light.svg
+          python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/days.svg
+          THEME=light python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/days-light.svg
 
       - name: Push to output branch
         run: |

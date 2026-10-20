@@ -25,9 +25,9 @@ I'm a third-year **Data Science** student at **King Fahd University of Petroleum
 ### Activity
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/activity.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/activity-light.svg" />
-  <img alt="Contribution activity over the last 12 months" src="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/activity-light.svg" width="100%" />
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/days.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/days-light.svg" />
+  <img alt="Contribution activity over the last 12 months" src="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/days-light.svg" width="100%" />
 </picture>
 
 > *"I have limits. What I create will go beyond them."*
