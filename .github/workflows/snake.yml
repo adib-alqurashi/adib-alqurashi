@@ -18,8 +18,7 @@ jobs:
 
       - name: Draw contribution grid
         env:
-          # Your own token, so a private profile still shows your activity here.
-          GITHUB_TOKEN: ${{ secrets.CONTRIB_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/contrib.svg
           THEME=light python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/contrib-light.svg
