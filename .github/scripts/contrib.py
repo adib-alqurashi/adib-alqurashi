@@ -41,16 +41,6 @@ def from_commits():
         if sha and date:
             seen[sha] = dt.datetime.fromisoformat(date.replace("Z", "+00:00")).astimezone(TZ).date().isoformat()
 
-    for page in range(1, 11):  # commit search (may be empty for private profiles)
-        try:
-            r = api(f"https://api.github.com/search/commits?q=author:{user}+author-date:>={since}&per_page=100&page={page}")
-        except urllib.error.HTTPError:
-            break
-        for it in r.get("items", []):
-            if not it.get("repository", {}).get("fork"):
-                add(it["sha"], it["commit"]["author"]["date"])
-        if len(r.get("items", [])) < 100:
-            break
     repos = []
     for url in [f"https://api.github.com/users/{user}/repos?per_page=100&type=owner"] + \
                [f"https://api.github.com/orgs/{o}/repos?per_page=100" for o in ORGS]:
