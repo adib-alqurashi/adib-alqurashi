@@ -111,7 +111,8 @@ def button(kind, label, t):
 if __name__ == "__main__":
     out = sys.argv[1]
     os.makedirs(out, exist_ok=True)
-    for name, fn in [("profile", profile), ("now", now)]:
+    # The profile and "now" cards moved to profile.py; this script now only draws the link buttons.
+    for name, fn in []:
         for theme, t in THEMES.items():
             open(os.path.join(out, f"{name}-{theme}.svg"), "w").write(fn(t))
     for kind, label in BUTTONS:

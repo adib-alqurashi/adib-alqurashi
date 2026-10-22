@@ -23,6 +23,14 @@ jobs:
           python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/days.svg
           THEME=light python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/days-light.svg
 
+      - name: Draw the contribution snake
+        uses: Platane/snk@v3
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          outputs: |
+            dist/snake-dark.svg?palette=github-dark&color_snake=#3b82f6&color_dots=#151b23,#0f2a5c,#1d4ed8,#3b82f6,#93c5fd
+            dist/snake-light.svg?palette=github-light&color_snake=#2563eb&color_dots=#eef1f6,#bfd3fb,#7aa5f7,#3b7cf0,#1d4ed8
+
       - name: Push to output branch
         run: |
           cd dist
