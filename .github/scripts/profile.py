@@ -11,6 +11,7 @@ Colour: one ink, one paper, one accent. The accent ramp for Figure 1 is spaced e
 from paper to accent, so the levels read in order in both themes and in greyscale.
 Fonts are system stacks: GitHub serves SVGs as images, which cannot load web fonts.
 """
+import base64
 import datetime as dt
 import json
 import os
@@ -46,9 +47,32 @@ CURRENT = [  # title, note
 ]
 
 # ------------------------------------------------------------------ THEME
-SERIF = "Charter, 'Bitstream Charter', 'Iowan Old Style', 'Palatino Linotype', Georgia, 'Times New Roman', serif"
+SERIF = "Fr, Charter, 'Iowan Old Style', Georgia, 'Times New Roman', serif"
+DISPLAY = "FrD, " + SERIF
+ARABIC = "Am, 'Noto Naskh Arabic', serif"
 SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif"
-MONO = "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace"
+MONO = "JB, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "fonts")
+FACES = [  # family, file, weight, style. Trimmed to Latin (and the Arabic name) by fonttools; OFL licences sit beside them.
+    ("Fr", "fraunces-text.woff", 400, "normal"),
+    ("Fr", "fraunces-bold.woff", 700, "normal"),
+    ("Fr", "fraunces-italic.woff", 400, "italic"),
+    ("FrD", "fraunces-display.woff", 700, "normal"),
+    ("JB", "jetbrains-mono.woff", 500, "normal"),
+    ("Am", "amiri-bold.woff", 700, "normal"),
+]
+
+
+def font_faces():
+    """Embedded @font-face rules: an SVG shown as an image may not fetch fonts, but data: URIs work."""
+    rules = []
+    for fam, fname, weight, style in FACES:
+        path = os.path.join(FONT_DIR, fname)
+        if os.path.exists(path):
+            data = base64.b64encode(open(path, "rb").read()).decode()
+            rules.append(f"@font-face{{font-family:{fam};src:url(data:font/woff;base64,{data}) format('woff');"
+                         f"font-weight:{weight};font-style:{style}}}")
+    return f"<defs><style>{''.join(rules)}</style></defs>"
 THEMES = {
     "light": dict(paper="#fbf8f1", ink="#1c1a17", muted="#6e685f", rule="#ddd5c6", soft="#f3eee3",
                   accent="#b4232a", ramp=["#efe8db", "#f0c3b4", "#e18674", "#c7493c", "#9a1d24"]),
@@ -112,8 +136,8 @@ def page(th, act):
     p.append(f'<line x1="{M}" x2="{W - M}" y1="{y}" y2="{y}" stroke="{th["ink"]}" stroke-width="1.2"/>')
     # title block
     y += 64
-    p.append(t_(M, y, e(NAME), th, 50, "ink", SERIF, 700, extra='letter-spacing="-1"'))
-    p.append(t_(W - M, y - 4, e(NAME_AR), th, 24, "muted", SERIF, 600, "end"))
+    p.append(t_(M, y, e(NAME), th, 54, "ink", DISPLAY, 700, extra='letter-spacing="-1.2"'))
+    p.append(t_(W - M, y - 4, e(NAME_AR), th, 28, "muted", ARABIC, 700, "end"))
     y += 34
     p.append(t_(M, y, e(SUBTITLE), th, 19, "ink", SERIF, extra='font-style="italic"'))
     y += 28
@@ -157,7 +181,7 @@ def page(th, act):
     y += 44
     eq = (f'<tspan font-style="italic">career</tspan><tspan baseline-shift="super" font-size="13">*</tspan>'
           f'  =  arg max<tspan baseline-shift="sub" font-size="12" font-style="italic"> path</tspan>'
-          f'   𝔼 [ <tspan font-style="italic">research</tspan> × <tspan font-style="italic">mathematics</tspan>'
+          f'   E [ <tspan font-style="italic">research</tspan> × <tspan font-style="italic">mathematics</tspan>'
           f' × <tspan font-style="italic">usefulness</tspan> ]')
     p.append(t_(W / 2, y, eq, th, 21, "ink", SERIF, anchor="middle", extra='xml:space="preserve"'))
     p.append(t_(W - M, y, "(1)", th, 15, "muted", SERIF, anchor="end"))
@@ -186,7 +210,7 @@ def page(th, act):
            + "; ".join(f"{a} ({b})" for a, b in CURRENT) + ". Figure 1: contribution activity.")
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {h}" width="{W}" height="{h}" role="img" '
             f'aria-label="{e(lab)}"><title>{e(lab)}</title>'
-            f'<rect x=".5" y=".5" width="{W - 1}" height="{h - 1}" rx="4" fill="{th["paper"]}" stroke="{th["rule"]}"/>'
+            f'{font_faces()}<rect x=".5" y=".5" width="{W - 1}" height="{h - 1}" rx="4" fill="{th["paper"]}" stroke="{th["rule"]}"/>'
             f'{"".join(p)}</svg>\n')
 
 
