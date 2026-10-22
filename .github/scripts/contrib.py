@@ -187,6 +187,7 @@ svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{
 os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
 open(out, "w").write(svg)
 if os.environ.get("ACTIVITY_JSON"):  # numbers for the one-block profile card (profile.py)
-    json.dump(dict(total=total, unit=unit, active=active, longest=longest, current=current),
+    json.dump(dict(total=total, unit=unit, active=active, longest=longest, current=current,
+                   start=DAYS[0].isoformat(), series=series),
               open(os.environ["ACTIVITY_JSON"], "w"))
 print("wrote", out, total, unit, source)

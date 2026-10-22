@@ -1,7 +1,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/profile-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/profile-light.svg" />
-  <img alt="Adeeb Alqurashi. Third-year B.S. Data Science student at KFUPM, Dammam, Saudi Arabia. Focus: research, mathematics and useful projects. Goal: a career in academic research. Featured project: the KFUPM Computer Club website. Right now: Intro to Data Science, Kaggle, KAUST Academy Stage 1, math competitions. Activity: contribution snake for the last 12 months." src="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/profile-light.svg" width="100%" />
+  <img alt="Adeeb Alqurashi. Third-year B.S. Data Science student at KFUPM, Dammam, Saudi Arabia. Focus: research, mathematics and useful projects. Goal: a career in academic research. Featured project: the KFUPM Computer Club website. Right now: Intro to Data Science, Kaggle, KAUST Academy Stage 1, math competitions. Figure 1: contribution activity for the last 12 months." src="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/profile-light.svg" width="100%" />
 </picture>
 
 <p align="center">
