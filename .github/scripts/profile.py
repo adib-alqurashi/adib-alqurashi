@@ -46,8 +46,8 @@ KIND_ORDER = ["Commits", "Pull requests", "Issues", "Reviews"]
 WEEKS = 20  # recent weeks drawn large, rather than a mostly empty year
 
 # ------------------------------------------------------------------ THEME
-SERIF = "Fr, Charter, 'Iowan Old Style', Georgia, 'Times New Roman', serif"
-DISPLAY = "FrD, " + SERIF
+SERIF = "Fr, Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+DISPLAY = "FrD, 'Instrument Serif', Georgia, serif"
 MONO = "JB, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
 THEMES = {  # GitHub's Primer colours: canvas, foreground, muted, border, subtle canvas
     "dark": dict(paper="#0d1117", ink="#f0f6fc", muted="#9198a1", rule="#3d444d", soft="#151b23",
@@ -56,13 +56,13 @@ THEMES = {  # GitHub's Primer colours: canvas, foreground, muted, border, subtle
                   ramp=["#eff2f5", "#c8d1da", "#8c959f", "#59636e", "#1f2328"]),
 }
 W, M = 880, 48  # width, page margin
-AVG = 0.48  # average Fraunces glyph width as a fraction of the size, for wrapping
+AVG = 0.52  # average Inter glyph width as a fraction of the size, for wrapping
 FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "fonts")
 FACES = [  # family, file, weight, style. Trimmed to Latin by fonttools; the OFL licences sit beside them.
-    ("Fr", "fraunces-text.woff", 400, "normal"),
-    ("Fr", "fraunces-bold.woff", 700, "normal"),
-    ("Fr", "fraunces-italic.woff", 400, "italic"),
-    ("FrD", "fraunces-display.woff", 700, "normal"),
+    ("Fr", "inter-regular.woff", 400, "normal"),
+    ("Fr", "inter-semibold.woff", 700, "normal"),
+    ("Fr", "instrument-serif-italic.woff", 400, "italic"),  # italics in the serif: captions and the equation
+    ("FrD", "instrument-serif.woff", 700, "normal"),  # display: the name and the big numbers
     ("JB", "jetbrains-mono.woff", 500, "normal"),
 ]
 
@@ -232,7 +232,7 @@ def page(th, act):
     p.append(t_(W / 2, y, eq, th, 24, "ink", SERIF, anchor="middle", extra='xml:space="preserve"'))
     st = (f'subject to   <tspan font-style="italic">what I build</tspan>  &gt;  <tspan font-style="italic">my limits</tspan>'
           f',   <tspan font-style="italic">curiosity</tspan>  '
-          f'<tspan font-family="{MONO}" font-size="16">→ ∞</tspan>')  # Fraunces has no arrow or infinity
+          f'<tspan font-family="{MONO}" font-size="16">→ ∞</tspan>')  # set in the mono for a consistent arrow
     p.append(t_(W / 2, y + 36, st, th, 18, "muted", SERIF, anchor="middle", extra='xml:space="preserve"'))
     y += 96
     p.append(heading(M, y, "Activity", th))
