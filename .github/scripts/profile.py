@@ -32,8 +32,8 @@ ABSTRACT = (
 )
 SELECTED = dict(
     title="KFUPM Computer Club website",
-    text="A home for the club's community: where its history is kept, its work is shared and the ideas "
-         "its members build get seen.",
+    text="A home for the club's community: where its history is kept, its work is shared and its "
+         "members' ideas get seen.",
     link="cckfupm.vercel.app  →",
 )
 NOW = [  # title, note
@@ -94,11 +94,11 @@ def para(x, y, text, th, size, width, lh, color="ink", extra=""):
 
 
 def smallcaps(x, y, s, th, color="muted", anchor="start"):
-    return t_(x, y, e(s), th, 11.5, color, MONO, 500, anchor, 'letter-spacing="2"')
+    return t_(x, y, e(s), th, 12.5, color, MONO, 500, anchor, 'letter-spacing="2"')
 
 
 def heading(x, y, s, th):
-    return t_(x, y, e(s), th, 21, "ink", SERIF, 700, extra='letter-spacing="-.2"')
+    return t_(x, y, e(s), th, 23.5, "ink", SERIF, 700, extra='letter-spacing="-.2"')
 
 
 def heatmap(th, x, y, act):
@@ -123,7 +123,7 @@ def heatmap(th, x, y, act):
             out.append(f'<rect x="{x + w * step}" y="{y + r * step}" width="{cell}" height="{cell}" rx="3" '
                        f'fill="{th["ramp"][lvl]}"/>')
             if r == 0 and d.month != last_month and w < WEEKS - 1:
-                out.append(t_(x + w * step, y - 10, d.strftime("%b"), th, 12.5, "muted", SERIF,
+                out.append(t_(x + w * step, y - 10, d.strftime("%b"), th, 14, "muted", SERIF,
                               extra='font-style="italic"'))
                 last_month = d.month
     for r, n in [(1, "Mon"), (3, "Wed"), (5, "Fri")]:
@@ -144,7 +144,7 @@ def activity(th, y, act):
     for i, (n, lab) in enumerate(stats):
         x = M + i * cw
         p.append(t_(x, y + 42, e(str(n)), th, 46, "ink", DISPLAY, 700, extra='letter-spacing="-1.2"'))
-        p.append(t_(x, y + 66, e(lab), th, 15, "muted", SERIF, extra='font-style="italic"'))
+        p.append(t_(x, y + 68, e(lab), th, 17, "muted", SERIF, extra='font-style="italic"'))
     y += 98
     kinds = a.get("kinds") or {}
     total = sum(kinds.values())
@@ -164,8 +164,8 @@ def activity(th, y, act):
             pct = round(100 * kinds[k] / total)
             p.append(f'<rect x="{lx}" y="{y + 30}" width="11" height="11" rx="2" fill="{shades[i]}"/>')
             p.append(t_(lx + 18, y + 40, f'{e(k)} <tspan fill="{th["ink"]}" font-weight="700">{pct}%</tspan>',
-                        th, 14.5, "muted", SERIF, extra='xml:space="preserve"'))
-            lx += 18 + (len(k) + 5) * 14.5 * AVG + 30
+                        th, 16.5, "muted", SERIF, extra='xml:space="preserve"'))
+            lx += 18 + (len(k) + 5) * 16.5 * AVG + 30
         y += 76
     hm, hh = heatmap(th, M + 30, y + 22, act)
     p.append(hm)
@@ -176,8 +176,8 @@ def activity(th, y, act):
     for i, (name, c) in enumerate(repos[:4]):
         yy = y + 42 + i * 36
         short = name if len(name) <= 30 else name[:29] + "…"
-        p.append(t_(rx, yy, e(short), th, 13.5, "ink", MONO))
-        p.append(t_(W - M, yy, str(c), th, 13.5, "muted", MONO, anchor="end"))
+        p.append(t_(rx, yy, e(short), th, 14.5, "ink", MONO))
+        p.append(t_(W - M, yy, str(c), th, 14.5, "muted", MONO, anchor="end"))
         p.append(f'<rect x="{rx}" y="{yy + 9}" width="{W - M - rx}" height="4" rx="2" fill="{th["ramp"][1]}"/>'
                  f'<rect x="{rx}" y="{yy + 9}" width="{(W - M - rx) * c / peak:.1f}" height="4" rx="2" fill="{th["ink"]}"/>')
     if not repos:
@@ -185,7 +185,7 @@ def activity(th, y, act):
     y += max(hh + 22, 42 + 4 * 36) + 20
     cap = (f"Public contributions; the grid shows the last {WEEKS} weeks. "
            f"Current streak: {a.get('current', '—')} days. Updated every day.")
-    p.append(t_(M, y, e(cap), th, 13.5, "muted", SERIF, extra='font-style="italic"'))
+    p.append(t_(M, y, e(cap), th, 15, "muted", SERIF, extra='font-style="italic"'))
     return "".join(p), y
 
 
@@ -193,18 +193,18 @@ def page(th, act):
     p, y = [], 70
     p.append(t_(M, y, e(NAME), th, 64, "ink", DISPLAY, 700, extra='letter-spacing="-2.4"'))
     y += 38
-    p.append(t_(M, y, e(AFFIL), th, 16, "muted", SERIF, extra='xml:space="preserve"'))
+    p.append(t_(M, y, e(AFFIL), th, 18, "muted", SERIF, extra='xml:space="preserve"'))
     y += 32
-    p.append(t_(M, y, e(EPIGRAPH), th, 17, "ink", SERIF, extra='font-style="italic"'))
+    p.append(t_(M, y, e(EPIGRAPH), th, 18.5, "ink", SERIF, extra='font-style="italic"'))
     # abstract
     y += 34
-    body, _ = para(0, 0, ABSTRACT, th, 17.5, W - 2 * M - 56, 28)
+    body, _ = para(0, 0, ABSTRACT, th, 19.5, W - 2 * M - 56, 31)
     lines = body.count("<text")
-    box_h = 58 + 28 * lines
+    box_h = 62 + 31 * lines
     p.append(f'<rect x="{M}" y="{y}" width="{W - 2 * M}" height="{box_h}" rx="8" fill="{th["soft"]}"/>'
              f'<rect x="{M}" y="{y + 14}" width="3" height="{box_h - 28}" rx="1.5" fill="{th["ink"]}"/>')
     p.append(smallcaps(M + 28, y + 32, "ABSTRACT", th, "ink"))
-    abstract, _ = para(M + 28, y + 62, ABSTRACT, th, 17.5, W - 2 * M - 56, 28)
+    abstract, _ = para(M + 28, y + 66, ABSTRACT, th, 19.5, W - 2 * M - 56, 31)
     p.append(abstract)
     y += box_h + 54
     # selected work and right now, side by side
@@ -214,17 +214,17 @@ def page(th, act):
     p.append(heading(x2, y, "Right now", th))
     y0 = y + 34
     s = SELECTED
-    p.append(t_(M, y0, e(s["title"]), th, 17, "ink", SERIF, 700))
-    txt, last = para(M, y0 + 27, s["text"], th, 15.5, colw, 24)
+    p.append(t_(M, y0, e(s["title"]), th, 19, "ink", SERIF, 700))
+    txt, last = para(M, y0 + 30, s["text"], th, 17.5, colw, 27)
     p.append(txt)
     link_y = last + 32
-    p.append(t_(M, link_y, e(s["link"]), th, 14, "ink", MONO, extra='text-decoration="underline"'))
+    p.append(t_(M, link_y, e(s["link"]), th, 15.5, "ink", MONO, extra='text-decoration="underline"'))
     for i, (title, note) in enumerate(NOW):
-        yy = y0 + i * 34
+        yy = y0 + i * 38
         p.append(t_(x2, yy, f'<tspan font-weight="700">{e(title)}</tspan>'
                             f'<tspan fill="{th["muted"]}" font-style="italic">  —  {e(note)}</tspan>',
-                    th, 16, "ink", SERIF, extra='xml:space="preserve"'))
-    y = max(link_y, y0 + (len(NOW) - 1) * 34) + 58
+                    th, 18, "ink", SERIF, extra='xml:space="preserve"'))
+    y = max(link_y, y0 + (len(NOW) - 1) * 38) + 60
     # objective, set like a display equation
     p.append(heading(M, y, "Objective", th))
     y += 54
