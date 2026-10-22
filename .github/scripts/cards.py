@@ -10,7 +10,7 @@ from xml.sax.saxutils import escape as e
 # ------------------------------------------------------------------ DATA
 ABOUT = [("University", "KFUPM"), ("Major", "Data Science, B.S."), ("Year", "Third year"),
          ("Focus", "Research & Math"), ("Based in", "Dammam, Saudi Arabia")]
-BUTTONS = [("email", "Email"), ("linkedin", "LinkedIn"), ("x", "X")]
+BUTTONS = [("web", "CC KFUPM website"), ("email", "Email"), ("linkedin", "LinkedIn"), ("x", "X")]
 SKILLS = ["Python", "Java", "NumPy", "pandas", "Matplotlib", "scikit-learn",
           "OOP", "Data structures", "Algorithms", "LaTeX", "Overleaf"]
 NOW = [  # icon, kind, title, caption, color
@@ -101,7 +101,8 @@ def button(kind, label, t):
     st = f'fill="none" stroke="{t["fg"]}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"'
     ic = {"email": f'<rect x="14" y="11" width="16" height="12" rx="2" {st}/><path d="M15 12.5l7 5 7-5" {st}/>',
           "linkedin": f'<rect x="14" y="12.5" width="16" height="11" rx="2" {st}/><path d="M19 12.5v-1.5a1.2 1.2 0 0 1 1.2-1.2h3.6a1.2 1.2 0 0 1 1.2 1.2v1.5M14 17.5h16" {st}/>',
-          "x": f'<path d="M15 10.5l12 13M27 10.5l-12 13" {st}/>'}[kind]
+          "x": f'<path d="M15 10.5l12 13M27 10.5l-12 13" {st}/>',
+          "web": f'<circle cx="22" cy="17" r="7.5" {st}/><path d="M14.5 17h15M22 9.5c2.4 2.2 2.4 12.8 0 15M22 9.5c-2.4 2.2-2.4 12.8 0 15" {st}/>'}[kind]
     w = int(width(label, 14, True) + 52)
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} 34" width="{w}" height="34" font-family="{FONT}" role="img" aria-label="{e(label)}">'
             f'<rect x=".5" y=".5" width="{w - 1}" height="33" rx="6" fill="{t["sub"]}" stroke="{t["line"]}"/>{ic}'

@@ -20,11 +20,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ACTIVITY_JSON=activity.json python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/days.svg
+          ACTIVITY_JSON=dist/activity.json python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/days.svg
           THEME=light python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/days-light.svg
 
-      - name: Draw the profile page (Figure 1 uses activity.json)
-        run: python3 .github/scripts/profile.py dist activity.json
+      - name: Draw the profile page (activity section uses dist/activity.json)
+        run: python3 .github/scripts/profile.py dist dist/activity.json
 
       - name: Push to output branch
         run: |

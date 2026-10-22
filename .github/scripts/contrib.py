@@ -20,6 +20,7 @@ TZ = dt.timezone(dt.timedelta(hours=3))  # Asia/Riyadh
 TODAY = dt.datetime.now(TZ).date()
 DAYS = [TODAY - dt.timedelta(days=i) for i in range(364, -1, -1)]
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
+KINDS, REPOS = {}, {}  # filled by from_public_activity: contributions per type and per repo
 
 
 def api(url, body=None):
@@ -59,24 +60,27 @@ def from_public_activity():
     for url in [f"https://api.github.com/users/{user}/repos?type=owner"] + \
                [f"https://api.github.com/orgs/{o}/repos?type=all" for o in ORGS]:
         repos += [r["full_name"] for r in get_all(url, 3) if not r.get("fork")]  # GitHub doesn't count forks
-    events = {}  # unique key -> day
+    events = {}  # unique key -> (day, kind, repo)
     for full in repos:
         base = f"https://api.github.com/repos/{full}"
         for c in get_all(f"{base}/commits?author={user}&since={since.isoformat()}T00:00:00Z"):
-            events["c" + c["sha"]] = day(c["commit"]["author"]["date"])
+            events["c" + c["sha"]] = (day(c["commit"]["author"]["date"]), "Commits", full)
         for it in get_all(f"{base}/issues?state=all&creator={user}"):
-            events[f"i{full}#{it['number']}"] = day(it["created_at"])
+            kind = "Pull requests" if it.get("pull_request") else "Issues"
+            events[f"i{full}#{it['number']}"] = (day(it["created_at"]), kind, full)
         for pr in get_all(f"{base}/pulls?state=all", 3):
             if pr["updated_at"][:10] < first:
                 continue
             reviews = [rv for rv in get_all(f"{base}/pulls/{pr['number']}/reviews", 2)
                        if (rv.get("user") or {}).get("login", "").lower() == user.lower() and rv.get("submitted_at")]
             if reviews and (pr.get("user") or {}).get("login", "").lower() != user.lower():
-                events[f"r{full}#{pr['number']}"] = day(min(rv["submitted_at"] for rv in reviews))
+                events[f"r{full}#{pr['number']}"] = (day(min(rv["submitted_at"] for rv in reviews)), "Reviews", full)
     counts = {}
-    for d in events.values():
+    for d, kind, full in events.values():
         if d >= first:
             counts[d] = counts.get(d, 0) + 1
+            KINDS[kind] = KINDS.get(kind, 0) + 1
+            REPOS[full] = REPOS.get(full, 0) + 1
     return counts
 
 
@@ -186,8 +190,14 @@ svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{
 </svg>"""
 os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
 open(out, "w").write(svg)
-if os.environ.get("ACTIVITY_JSON"):  # numbers for the one-block profile card (profile.py)
+if os.environ.get("ACTIVITY_JSON"):  # numbers for the profile page (profile.py)
+    if not KINDS:  # the calendar gives days only; the public scan adds the per-type and per-repo split
+        try:
+            from_public_activity()
+        except Exception:
+            pass
     json.dump(dict(total=total, unit=unit, active=active, longest=longest, current=current,
-                   start=DAYS[0].isoformat(), series=series),
+                   start=DAYS[0].isoformat(), series=series, kinds=KINDS,
+                   repos=sorted(REPOS.items(), key=lambda kv: -kv[1])[:4]),
               open(os.environ["ACTIVITY_JSON"], "w"))
 print("wrote", out, total, unit, source)
