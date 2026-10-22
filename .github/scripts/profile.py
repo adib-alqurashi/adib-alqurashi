@@ -46,8 +46,9 @@ KIND_ORDER = ["Commits", "Pull requests", "Issues", "Reviews"]
 WEEKS = 20  # recent weeks drawn large, rather than a mostly empty year
 
 # ------------------------------------------------------------------ THEME
-SERIF = "Fr, Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
-DISPLAY = "FrD, 'Instrument Serif', Georgia, serif"
+SERIF = "Fr, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+MATH = "CM, 'CMU Serif', 'Latin Modern Roman', Georgia, serif"
+DISPLAY = "FrD, " + SERIF
 MONO = "JB, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
 THEMES = {  # GitHub's Primer colours: canvas, foreground, muted, border, subtle canvas
     "dark": dict(paper="#0d1117", ink="#f0f6fc", muted="#9198a1", rule="#3d444d", soft="#151b23",
@@ -59,11 +60,13 @@ W, M = 880, 48  # width, page margin
 AVG = 0.52  # average Inter glyph width as a fraction of the size, for wrapping
 FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "fonts")
 FACES = [  # family, file, weight, style. Trimmed to Latin by fonttools; the OFL licences sit beside them.
-    ("Fr", "inter-regular.woff", 400, "normal"),
+    ("Fr", "inter-regular.woff", 400, "normal"),  # Inter: the open font closest to Apple's San Francisco
     ("Fr", "inter-semibold.woff", 700, "normal"),
-    ("Fr", "instrument-serif-italic.woff", 400, "italic"),  # italics in the serif: captions and the equation
-    ("FrD", "instrument-serif.woff", 700, "normal"),  # display: the name and the big numbers
+    ("Fr", "inter-italic.woff", 400, "italic"),
+    ("FrD", "inter-display.woff", 700, "normal"),  # the name and the big numbers
     ("JB", "jetbrains-mono.woff", 500, "normal"),
+    ("CM", "cmu-serif.woff", 400, "normal"),  # Computer Modern, the LaTeX typeface, for the equation only
+    ("CM", "cmu-serif-italic.woff", 400, "italic"),
 ]
 
 
@@ -188,7 +191,7 @@ def activity(th, y, act):
 
 def page(th, act):
     p, y = [], 70
-    p.append(t_(M, y, e(NAME), th, 68, "ink", DISPLAY, 700, extra='letter-spacing="-1.8"'))
+    p.append(t_(M, y, e(NAME), th, 64, "ink", DISPLAY, 700, extra='letter-spacing="-2.4"'))
     y += 38
     p.append(t_(M, y, e(AFFIL), th, 16, "muted", SERIF, extra='xml:space="preserve"'))
     y += 32
@@ -229,11 +232,11 @@ def page(th, act):
           f'  =  arg max<tspan baseline-shift="sub" font-size="14" font-style="italic"> path</tspan>'
           f'   E [ <tspan font-style="italic">research</tspan> × <tspan font-style="italic">mathematics</tspan>'
           f' × <tspan font-style="italic">usefulness</tspan> ]')
-    p.append(t_(W / 2, y, eq, th, 24, "ink", SERIF, anchor="middle", extra='xml:space="preserve"'))
+    p.append(t_(W / 2, y, eq, th, 23, "ink", MATH, anchor="middle", extra='xml:space="preserve"'))
     st = (f'subject to   <tspan font-style="italic">what I build</tspan>  &gt;  <tspan font-style="italic">my limits</tspan>'
           f',   <tspan font-style="italic">curiosity</tspan>  '
           f'<tspan font-family="{MONO}" font-size="16">→ ∞</tspan>')  # set in the mono for a consistent arrow
-    p.append(t_(W / 2, y + 36, st, th, 18, "muted", SERIF, anchor="middle", extra='xml:space="preserve"'))
+    p.append(t_(W / 2, y + 38, st, th, 20, "muted", MATH, anchor="middle", extra='xml:space="preserve"'))
     y += 96
     p.append(heading(M, y, "Activity", th))
     act_svg, y = activity(th, y + 18, act)
