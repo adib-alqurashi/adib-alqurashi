@@ -1,7 +1,7 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/profile-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/profile-light.svg" />
-  <img alt="Adib Alqurashi, data science student at KFUPM in Dammam, Saudi Arabia. Drawn to research and mathematics; co-built the KFUPM Computer Club website for a community of about 500 students; heading for a career in academic research. Right now: Intro to Data Science, Kaggle, KAUST Academy Stage 1, math competitions. Activity: contributions by type and repository." src="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/profile-light.svg" width="100%" />
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/profile-dark.svg?v=5" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/profile-light.svg?v=5" />
+  <img alt="Adib Alqurashi, data science student at KFUPM in Dammam, Saudi Arabia. Drawn to research and mathematics; co-built the KFUPM Computer Club website for a community of about 500 students; heading for a career in academic research. Right now: Intro to Data Science, Kaggle, KAUST Academy Stage 1, math competitions. Activity: contributions by type and repository." src="https://raw.githubusercontent.com/adib-alqurashi/adib-alqurashi/output/profile-light.svg?v=5" width="100%" />
 </picture>
 
 <p align="center">
