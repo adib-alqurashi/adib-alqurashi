@@ -36,32 +36,29 @@ AFFIL = "Data science student at KFUPM  ·  Dammam, Saudi Arabia"
 EPIGRAPH = "“I have limits. What I create will go beyond them.”"
 ABSTRACT = (
     "I'm drawn to research and mathematics, and I like turning what I learn into things people actually use. "
-    "Everything I learn ends up in Adib's Mind, a second brain I write partly by hand. "
-    "I'm in my third year of data science at KFUPM, I contribute to the DSE and Computer Clubs, and I'm "
-    "heading for a career in academic research."
+    "I keep everything I learn, written down and connected, because ideas grow when they are kept. "
+    "And I love to contribute: the best way I know to understand something is to build it with other people. "
+    "I'm a third-year data science student at KFUPM, heading for a career in academic research."
 )
 SELECTED = [  # title, text, link text, href (the href goes in README.md, one row per item)
     ("Adib's Mind",
-     "My second brain for mathematics, code and machine learning: KFUPM courses, handwritten "
-     "problem boards and LaTeX, all in Obsidian.",
+     "My second brain for mathematics, code and machine learning. Its articles: one in mathematics and "
+     "one on LLMs and SLMs, beside my KFUPM course notes and handwritten problem boards.",
      "github.com/adib-alqurashi/adibs-mind  →", "https://github.com/adib-alqurashi/adibs-mind"),
     ("Study Timer",
      "An Obsidian plugin I wrote: a one-click study timer with streaks, weekly totals and a "
      "calendar of dated tasks.",
      "adibs-mind / plugins / study-timer  →",
      "https://github.com/adib-alqurashi/adibs-mind/tree/main/.obsidian/plugins/study-timer"),
-    ("code-lab",
-     "Where I write code: problem solving, data science notebooks with NumPy, pandas and "
-     "scikit-learn, and small projects.",
-     "github.com/adib-alqurashi/code-lab  →", "https://github.com/adib-alqurashi/code-lab"),
-    ("KFUPM Computer Club website", "The club's home online, built with its members.",
+    ("KFUPM Computer Club website",
+     "I manage the project and mentor its contributors: I write the issues, review every pull "
+     "request and merge what ships.",
      "cckfupm.vercel.app  →", "https://cckfupm.vercel.app"),
 ]
-NOW = [  # title, note
-    ("Competition math", "Larson's Problem-Solving Through Problems, then Putnam problems"),
-    ("KAUST Academy", "the AI program, Stage 1"),
-    ("Kaggle", "a competition on data preprocessing"),
-    ("Next up", "an article on the linear algebra behind machine learning, for Adib's Mind"),
+NOW = [  # one short line each, all in the first row's right cell
+    "Kaggle: this month's Playground Series competition",
+    "Larson and Putnam competition problem sets",
+    "KAUST Academy",
 ]
 KIND_ORDER = ["Commits", "Pull requests", "Issues", "Reviews", "Private", "Other"]
 WEEKS = 20  # recent weeks drawn large, rather than a mostly empty year
@@ -127,10 +124,10 @@ def t_(x, y, s, th, size, color="ink", font=SERIF, weight=400, anchor="start", e
             f'text-anchor="{anchor}" fill="{th[color]}" {extra}>{s}</text>')
 
 
-def para(x, y, text, th, size, width, lh, color="ink", extra=""):
+def para(x, y, text, th, size, width, lh, color="ink", extra="", weight=400):
     """Wrapped paragraph; returns markup and the baseline after the last line."""
     lines = textwrap.wrap(text, max(10, int(width / (size * AVG))))
-    out = [t_(x, y + i * lh, e(line), th, size, color, extra=extra) for i, line in enumerate(lines)]
+    out = [t_(x, y + i * lh, e(line), th, size, color, weight=weight, extra=extra) for i, line in enumerate(lines)]
     return "".join(out), y + (len(lines) - 1) * lh
 
 
@@ -282,15 +279,15 @@ def work_cell(th, item, h=None):
     return need if h is None else svg(th, HALF, h, "".join(p), f"{title}. {text} {link}", ("Fr", "JB"))
 
 
-def now_cell(th, item, h=None):
-    """One Right now item: right half of the page."""
-    title, note = item
-    x = M + COLW + 48 - HALF
-    p = [t_(x, TOP, e(title), th, 19, "ink", SERIF, 700)]
-    txt, last = para(x, TOP + 30, note, th, 17.5, COLW, 27, "muted", extra='font-style="italic"')
-    p.append(txt)
-    need = last + PAD
-    return need if h is None else svg(th, HALF, h, "".join(p), f"Right now: {title}, {note}.", ("Fr",))
+def now_cell(th, items, h=None):
+    """Right now: a short list, set beside the first Selected work item."""
+    x, y, p = M + COLW + 48 - HALF, TOP, []
+    for item in items:
+        txt, last = para(x, y, item, th, 18, COLW, 26, weight=700)
+        p.append(txt)
+        y = last + 36
+    need = y - 36 + PAD
+    return need if h is None else svg(th, HALF, h, "".join(p), "Right now: " + "; ".join(items) + ".", ("Fr",))
 
 
 def equation(th, x, y):
@@ -321,14 +318,14 @@ def tail(th, act):
 
 
 def pages(th, act):
-    """name -> svg for one theme."""
+    """name -> svg for one theme. Row 1 pairs the first item with the Right now list; later rows have
+    an empty right half."""
     out = {"head": head(th), "tail": tail(th, act)}
-    for i in range(max(len(SELECTED), len(NOW))):
-        w = SELECTED[i] if i < len(SELECTED) else None
-        n = NOW[i] if i < len(NOW) else None
-        h = max(work_cell(th, w) if w else 0, now_cell(th, n) if n else 0)
-        out[f"work-{i + 1}"] = work_cell(th, w, h) if w else svg(th, HALF, h, "", "")
-        out[f"now-{i + 1}"] = now_cell(th, n, h) if n else svg(th, HALF, h, "", "")
+    for i, w in enumerate(SELECTED):
+        items = NOW if i == 0 else []
+        h = max(work_cell(th, w), now_cell(th, items) if items else 0)
+        out[f"work-{i + 1}"] = work_cell(th, w, h)
+        out[f"now-{i + 1}"] = now_cell(th, items, h) if items else svg(th, HALF, h, "", "")
     return out
 
 
