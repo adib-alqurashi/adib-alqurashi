@@ -40,10 +40,15 @@ ABSTRACT = (
     "And I love to contribute: the best way I know to understand something is to build it with other people. "
     "I'm a third-year data science student at KFUPM, heading for a career in academic research."
 )
-SELECTED = [  # title, text, link text, href (the href goes in README.md, one row per item)
+SELECTED = [  # title, text, link text, href. Four cells, two per row; the href goes in README.md
+    ("Articles",
+     "Two finished pieces, written in Adib's Mind: one on spectral decomposition and the geometry of "
+     "least squares, one on how small language models are distilled and quantised from large ones.",
+     "adibs-mind / 2 Create / Articles  →",
+     "https://github.com/adib-alqurashi/adibs-mind/tree/main/2%20Create/Articles"),
     ("Adib's Mind",
-     "My second brain for mathematics, code and machine learning. Its articles: one in mathematics and "
-     "one on LLMs and SLMs, beside my KFUPM course notes and handwritten problem boards.",
+     "My second brain for mathematics, code and machine learning: KFUPM course notes, handwritten "
+     "problem boards and LaTeX, all in Obsidian and synced to GitHub.",
      "github.com/adib-alqurashi/adibs-mind  →", "https://github.com/adib-alqurashi/adibs-mind"),
     ("Study Timer",
      "An Obsidian plugin I wrote: a one-click study timer with streaks, weekly totals and a "
@@ -55,11 +60,9 @@ SELECTED = [  # title, text, link text, href (the href goes in README.md, one ro
      "request and merge what ships.",
      "cckfupm.vercel.app  →", "https://cckfupm.vercel.app"),
 ]
-NOW = [  # one short line each, all in the first row's right cell
-    "Kaggle: this month's Playground Series competition",
-    "Larson and Putnam competition problem sets",
-    "KAUST Academy",
-]
+NOW = ("Working through the Larson and Putnam problem sets, competing in this month's Kaggle Playground "
+       "Series on tabular feature engineering and model selection, and training in the KAUST Academy "
+       "AI program.")
 KIND_ORDER = ["Commits", "Pull requests", "Issues", "Reviews", "Private", "Other"]
 WEEKS = 20  # recent weeks drawn large, rather than a mostly empty year
 
@@ -260,7 +263,6 @@ def head(th):
     p.append(abstract)
     y += box_h + 54
     p.append(heading(M, y, "Selected work", th))
-    p.append(heading(M + COLW + 48, y, "Right now", th))
     lab = f"{NAME}. {AFFIL}. {EPIGRAPH} Abstract: {ABSTRACT}"
     return svg(th, W, y + 12, "".join(p), lab)
 
@@ -268,27 +270,25 @@ def head(th):
 TOP, PAD = 26, 30  # first baseline in a cell, space under its last line
 
 
-def work_cell(th, item, h=None):
-    """One Selected work item: left half of the page, drawn at the page's own coordinates."""
+def work_cell(th, item, side, h=None):
+    """One Selected work item in half the page; side 0 is the left column, 1 the right."""
     title, text, link, _ = item
-    p = [t_(M, TOP, e(title), th, 19, "ink", SERIF, 700)]
-    txt, last = para(M, TOP + 30, text, th, 17.5, COLW, 27)
+    x = M if side == 0 else M + COLW + 48 - HALF
+    p = [t_(x, TOP, e(title), th, 19, "ink", SERIF, 700)]
+    txt, last = para(x, TOP + 30, text, th, 17.5, COLW, 27)
     p.append(txt)
     link_y = last + 32
-    p.append(t_(M, link_y, e(link), th, 15.5, "ink", MONO, extra='text-decoration="underline"'))
+    p.append(t_(x, link_y, e(link), th, 15.5, "ink", MONO, extra='text-decoration="underline"'))
     need = link_y + PAD
     return need if h is None else svg(th, HALF, h, "".join(p), f"{title}. {text} {link}", ("Fr", "JB"))
 
 
-def now_cell(th, items, h=None):
-    """Right now: a short list, set beside the first Selected work item."""
-    x, y, p = M + COLW + 48 - HALF, TOP, []
-    for item in items:
-        txt, last = para(x, y, item, th, 18, COLW, 26, weight=700)
-        p.append(txt)
-        y = last + 36
-    need = y - 36 + PAD
-    return need if h is None else svg(th, HALF, h, "".join(p), "Right now: " + "; ".join(items) + ".", ("Fr",))
+def now_block(th):
+    """Right now: a heading and a short paragraph across the whole page."""
+    p, y = [heading(M, 30, "Right now", th)], 64
+    txt, last = para(M, y, NOW, th, 18.5, W - 2 * M, 30)
+    p.append(txt)
+    return svg(th, W, last + 26, "".join(p), "Right now: " + NOW, ("Fr",))
 
 
 def equation(th, x, y):
@@ -319,14 +319,13 @@ def tail(th, act):
 
 
 def pages(th, act):
-    """name -> svg for one theme. Row 1 pairs the first item with the Right now list; later rows have
-    an empty right half."""
-    out = {"head": head(th), "tail": tail(th, act)}
-    for i, w in enumerate(SELECTED):
-        items = NOW if i == 0 else []
-        h = max(work_cell(th, w), now_cell(th, items) if items else 0)
-        out[f"work-{i + 1}"] = work_cell(th, w, h)
-        out[f"now-{i + 1}"] = now_cell(th, items, h) if items else svg(th, HALF, h, "", "")
+    """name -> svg for one theme: head, the work cells two per row (same height within a row), now, tail."""
+    out = {"head": head(th), "now": now_block(th), "tail": tail(th, act)}
+    for r in range(0, len(SELECTED), 2):
+        row = SELECTED[r:r + 2]
+        h = max(work_cell(th, it, i) for i, it in enumerate(row))
+        for i, it in enumerate(row):
+            out[f"work-{r + i + 1}"] = work_cell(th, it, i, h)
     return out
 
 
