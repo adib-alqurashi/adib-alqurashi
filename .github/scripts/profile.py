@@ -2,7 +2,14 @@
 and what the recent activity actually was.
 
 Usage: python .github/scripts/profile.py <out_dir> [activity.json]
-  -> writes <out_dir>/profile-dark.svg and profile-light.svg
+  -> writes, for each theme (dark, light):
+     profile-head-<theme>.svg          name, abstract and the two column headings
+     profile-work-<i>-<theme>.svg      Selected work, one cell per item (left half of the page)
+     profile-now-<i>-<theme>.svg       Right now, one cell per item (right half, same height as its row)
+     profile-tail-<theme>.svg          objective and activity
+The page is cut into pieces because GitHub shows SVGs as images, and links inside an image do not
+work: README.md wraps each Selected work cell in its own link and lays the cells out two per row at
+50% width, so the pieces line up into one page. Keep the rows in README.md in step with SELECTED.
 The daily workflow passes activity.json from contrib.py (totals, streaks, the daily series and the
 split by type and by repository), so the activity section is redrawn every day.
 
@@ -10,15 +17,18 @@ Edit the DATA section to change what the page says; everything else is layout. P
 wrapped automatically.
 Colour: GitHub's own background and text colours and no accent, so the page sits inside the
 profile as if GitHub drew it. The activity greys run evenly from background to text.
-Fonts are embedded (data: URIs) because GitHub serves SVGs as images, which cannot fetch fonts.
+Fonts are embedded (data: URIs) because GitHub serves SVGs as images, which cannot fetch fonts; each
+piece embeds only the faces it uses. The equation is assets/objective.svg, drawn as paths in Computer
+Modern by equation.py, so no math font is needed.
 """
 import base64
 import datetime as dt
 import json
 import os
+import re
 import sys
 import textwrap
-from xml.sax.saxutils import escape as e
+from xml.sax.saxutils import escape as e, unescape
 
 # ------------------------------------------------------------------ DATA
 NAME = "Adib Alqurashi"
@@ -26,28 +36,38 @@ AFFIL = "Data science student at KFUPM  ·  Dammam, Saudi Arabia"
 EPIGRAPH = "“I have limits. What I create will go beyond them.”"
 ABSTRACT = (
     "I'm drawn to research and mathematics, and I like turning what I learn into things people actually use. "
-    "Most recently I co-built the KFUPM Computer Club website, now home to a community of about 500 students. "
+    "Everything I learn ends up in Adib's Mind, a second brain I write partly by hand. "
     "I'm in my third year of data science at KFUPM, I contribute to the DSE and Computer Clubs, and I'm "
     "heading for a career in academic research."
 )
-SELECTED = dict(
-    title="KFUPM Computer Club website",
-    text="A home for the club's community: where its history is kept, its work is shared and its "
-         "members' ideas get seen.",
-    link="cckfupm.vercel.app  →",
-)
-NOW = [  # title, note
-    ("Intro to Data Science", "core course"),
-    ("Kaggle", "a live ML challenge"),
-    ("KAUST Academy", "Stage 1"),
-    ("Math competitions", "preparing"),
+SELECTED = [  # title, text, link text, href (the href goes in README.md, one row per item)
+    ("Adib's Mind",
+     "My second brain for mathematics, code and machine learning: KFUPM courses, handwritten "
+     "problem boards and LaTeX, all in Obsidian.",
+     "github.com/adib-alqurashi/adibs-mind  →", "https://github.com/adib-alqurashi/adibs-mind"),
+    ("Study Timer",
+     "An Obsidian plugin I wrote: a one-click study timer with streaks, weekly totals and a "
+     "calendar of dated tasks.",
+     "adibs-mind / plugins / study-timer  →",
+     "https://github.com/adib-alqurashi/adibs-mind/tree/main/.obsidian/plugins/study-timer"),
+    ("code-lab",
+     "Where I write code: problem solving, data science notebooks with NumPy, pandas and "
+     "scikit-learn, and small projects.",
+     "github.com/adib-alqurashi/code-lab  →", "https://github.com/adib-alqurashi/code-lab"),
+    ("KFUPM Computer Club website", "The club's home online, built with its members.",
+     "cckfupm.vercel.app  →", "https://cckfupm.vercel.app"),
 ]
-KIND_ORDER = ["Commits", "Pull requests", "Issues", "Reviews"]
+NOW = [  # title, note
+    ("Competition math", "Larson's Problem-Solving Through Problems, then Putnam problems"),
+    ("KAUST Academy", "the AI program, Stage 1"),
+    ("Kaggle", "a competition on data preprocessing"),
+    ("Next up", "an article on the linear algebra behind machine learning, for Adib's Mind"),
+]
+KIND_ORDER = ["Commits", "Pull requests", "Issues", "Reviews", "Private", "Other"]
 WEEKS = 20  # recent weeks drawn large, rather than a mostly empty year
 
 # ------------------------------------------------------------------ THEME
 SERIF = "Fr, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
-MATH = "CM, 'CMU Serif', 'Latin Modern Roman', Georgia, serif"
 DISPLAY = "FrD, " + SERIF
 MONO = "JB, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
 THEMES = {  # GitHub's Primer colours: canvas, foreground, muted, border, subtle canvas
@@ -65,19 +85,40 @@ FACES = [  # family, file, weight, style. Trimmed to Latin by fonttools; the OFL
     ("Fr", "inter-italic.woff", 400, "italic"),
     ("FrD", "inter-display.woff", 700, "normal"),  # the name and the big numbers
     ("JB", "jetbrains-mono.woff", 500, "normal"),
-    ("CM", "cmu-serif.woff", 400, "normal"),  # Computer Modern, the LaTeX typeface, for the equation only
-    ("CM", "cmu-serif-italic.woff", 400, "italic"),
 ]
 
 
-def font_faces():
+def font_data(fname, chars):
+    """The font file as base64, cut down to the characters a piece uses when fontTools is installed
+    (the workflow installs it; without it the whole file is embedded, which still works)."""
+    path = os.path.join(FONT_DIR, fname)
+    try:
+        import io
+        from fontTools import subset
+        from fontTools.ttLib import TTFont
+        opts = subset.Options()
+        opts.flavor, opts.layout_features, opts.notdef_outline = "woff", ["*"], True
+        font = TTFont(path)
+        sub = subset.Subsetter(opts)
+        sub.populate(text=chars + " ")
+        sub.subset(font)
+        buf = io.BytesIO()
+        font.flavor = "woff"
+        font.save(buf)
+        raw = buf.getvalue()
+    except ImportError:
+        raw = open(path, "rb").read()
+    return base64.b64encode(raw).decode()
+
+
+def font_faces(fams=("Fr", "FrD", "JB"), chars=None):
     rules = []
     for fam, fname, weight, style in FACES:
-        path = os.path.join(FONT_DIR, fname)
-        if os.path.exists(path):
-            data = base64.b64encode(open(path, "rb").read()).decode()
-            rules.append(f"@font-face{{font-family:{fam};src:url(data:font/woff;base64,{data}) format('woff');"
-                         f"font-weight:{weight};font-style:{style}}}")
+        if fam not in fams or not os.path.exists(os.path.join(FONT_DIR, fname)):
+            continue
+        data = font_data(fname, chars) if chars else base64.b64encode(open(os.path.join(FONT_DIR, fname), "rb").read()).decode()
+        rules.append(f"@font-face{{font-family:{fam};src:url(data:font/woff;base64,{data}) format('woff');"
+                     f"font-weight:{weight};font-style:{style}}}")
     return f"<defs><style>{''.join(rules)}</style></defs>"
 
 
@@ -138,7 +179,7 @@ def heatmap(th, x, y, act):
 
 def activity(th, y, act):
     p, a = [], act or {}
-    stats = [(a.get("total", "—"), "contributions this year"), (a.get("active", "—"), "active days"),
+    stats = [(a.get("total", "—"), "contributions in the last year"), (a.get("active", "—"), "active days"),
              (a.get("longest", "—"), "day longest streak")]
     cw = (W - 2 * M) / 3
     for i, (n, lab) in enumerate(stats):
@@ -150,7 +191,7 @@ def activity(th, y, act):
     total = sum(kinds.values())
     if total:  # what kind of work: one stacked bar in the grey scale
         x, bw = M, W - 2 * M
-        shades = [th["ink"], th["ramp"][3], th["ramp"][2], th["ramp"][1]]
+        shades = [th["ink"], th["ramp"][3], th["ramp"][2], th["ramp"][1], th["rule"], th["soft"]]
         order = [k for k in KIND_ORDER if kinds.get(k)]
         seg = []
         for i, k in enumerate(order):
@@ -183,71 +224,112 @@ def activity(th, y, act):
     if not repos:
         p.append(t_(rx, y + 42, "fills in after the daily update", th, 14, "muted", SERIF, extra='font-style="italic"'))
     y += max(hh + 22, 42 + 4 * 36) + 20
-    cap = (f"Public contributions; the grid shows the last {WEEKS} weeks. "
+    who = ("Every contribution on my GitHub graph, private ones included"
+           if a.get("source") == "api" else "Public contributions")
+    cap = (f"{who}; the grid shows the last {WEEKS} weeks. "
            f"Current streak: {a.get('current', '—')} days. Updated every day.")
     p.append(t_(M, y, e(cap), th, 15, "muted", SERIF, extra='font-style="italic"'))
     return "".join(p), y
 
 
-def page(th, act):
+COLW = (W - 2 * M - 48) / 2  # column width; the gap between the columns is 48
+HALF = W / 2  # each cell is half the page; the right column starts at M + COLW + 48 on the page
+EQ_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "objective.svg")
+
+
+def svg(th, w, h, body, label, fams=("Fr", "FrD", "JB"), xlink=False):
+    ns = ' xmlns:xlink="http://www.w3.org/1999/xlink"' if xlink else ""
+    chars = "".join(sorted(set(unescape(re.sub(r"<defs>.*?</defs>|<[^>]+>", "", body, flags=re.S)))))
+    return (f'<svg xmlns="http://www.w3.org/2000/svg"{ns} viewBox="0 0 {w:g} {h:g}" width="{w:g}" height="{h:g}" '
+            f'role="img" aria-label="{e(label)}"><title>{e(label)}</title>{font_faces(fams, chars)}'
+            f'<rect width="{w:g}" height="{h:g}" fill="{th["paper"]}"/>{body}</svg>\n')
+
+
+def head(th):
     p, y = [], 70
     p.append(t_(M, y, e(NAME), th, 64, "ink", DISPLAY, 700, extra='letter-spacing="-2.4"'))
     y += 38
     p.append(t_(M, y, e(AFFIL), th, 18, "muted", SERIF, extra='xml:space="preserve"'))
     y += 32
     p.append(t_(M, y, e(EPIGRAPH), th, 18.5, "ink", SERIF, extra='font-style="italic"'))
-    # abstract
     y += 34
     body, _ = para(0, 0, ABSTRACT, th, 19.5, W - 2 * M - 56, 31)
-    lines = body.count("<text")
-    box_h = 62 + 31 * lines
+    box_h = 62 + 31 * body.count("<text")
     p.append(f'<rect x="{M}" y="{y}" width="{W - 2 * M}" height="{box_h}" rx="8" fill="{th["soft"]}"/>'
              f'<rect x="{M}" y="{y + 14}" width="3" height="{box_h - 28}" rx="1.5" fill="{th["ink"]}"/>')
     p.append(smallcaps(M + 28, y + 32, "ABSTRACT", th, "ink"))
     abstract, _ = para(M + 28, y + 66, ABSTRACT, th, 19.5, W - 2 * M - 56, 31)
     p.append(abstract)
     y += box_h + 54
-    # selected work and right now, side by side
-    colw = (W - 2 * M - 48) / 2
-    x2 = M + colw + 48
     p.append(heading(M, y, "Selected work", th))
-    p.append(heading(x2, y, "Right now", th))
-    y0 = y + 34
-    s = SELECTED
-    p.append(t_(M, y0, e(s["title"]), th, 19, "ink", SERIF, 700))
-    txt, last = para(M, y0 + 30, s["text"], th, 17.5, colw, 27)
+    p.append(heading(M + COLW + 48, y, "Right now", th))
+    lab = f"{NAME}. {AFFIL}. {EPIGRAPH} Abstract: {ABSTRACT}"
+    return svg(th, W, y + 12, "".join(p), lab)
+
+
+TOP, PAD = 26, 30  # first baseline in a cell, space under its last line
+
+
+def work_cell(th, item, h=None):
+    """One Selected work item: left half of the page, drawn at the page's own coordinates."""
+    title, text, link, _ = item
+    p = [t_(M, TOP, e(title), th, 19, "ink", SERIF, 700)]
+    txt, last = para(M, TOP + 30, text, th, 17.5, COLW, 27)
     p.append(txt)
     link_y = last + 32
-    p.append(t_(M, link_y, e(s["link"]), th, 15.5, "ink", MONO, extra='text-decoration="underline"'))
-    for i, (title, note) in enumerate(NOW):
-        yy = y0 + i * 38
-        p.append(t_(x2, yy, f'<tspan font-weight="700">{e(title)}</tspan>'
-                            f'<tspan fill="{th["muted"]}" font-style="italic">  —  {e(note)}</tspan>',
-                    th, 18, "ink", SERIF, extra='xml:space="preserve"'))
-    y = max(link_y, y0 + (len(NOW) - 1) * 38) + 60
-    # objective, set like a display equation
+    p.append(t_(M, link_y, e(link), th, 15.5, "ink", MONO, extra='text-decoration="underline"'))
+    need = link_y + PAD
+    return need if h is None else svg(th, HALF, h, "".join(p), f"{title}. {text} {link}", ("Fr", "JB"))
+
+
+def now_cell(th, item, h=None):
+    """One Right now item: right half of the page."""
+    title, note = item
+    x = M + COLW + 48 - HALF
+    p = [t_(x, TOP, e(title), th, 19, "ink", SERIF, 700)]
+    txt, last = para(x, TOP + 30, note, th, 17.5, COLW, 27, "muted", extra='font-style="italic"')
+    p.append(txt)
+    need = last + PAD
+    return need if h is None else svg(th, HALF, h, "".join(p), f"Right now: {title}, {note}.", ("Fr",))
+
+
+def equation(th, x, y):
+    """assets/objective.svg (paths) placed at x, y, recoloured for the theme."""
+    if not os.path.exists(EQ_FILE):
+        return "", 0, 0
+    src = open(EQ_FILE, encoding="utf-8").read()
+    vb = [float(v) for v in src.split('viewBox="', 1)[1].split('"', 1)[0].split()]
+    inner = src[src.index(">", src.index("<svg")) + 1: src.rindex("</svg>")]
+    inner = inner.replace("#010203", th["ink"]).replace("#040506", th["muted"])
+    return f'<g transform="translate({x - vb[2] / 2:.1f} {y:.1f})">{inner}</g>', vb[2], vb[3]
+
+
+def tail(th, act):
+    p, y = [], 44
     p.append(heading(M, y, "Objective", th))
-    y += 54
-    eq = (f'<tspan font-style="italic">career</tspan><tspan baseline-shift="super" font-size="15">*</tspan>'
-          f'  =  arg max<tspan baseline-shift="sub" font-size="14" font-style="italic"> path</tspan>'
-          f'   E [ <tspan font-style="italic">research</tspan> × <tspan font-style="italic">mathematics</tspan>'
-          f' × <tspan font-style="italic">usefulness</tspan> ]')
-    p.append(t_(W / 2, y, eq, th, 23, "ink", MATH, anchor="middle", extra='xml:space="preserve"'))
-    st = (f'subject to   <tspan font-style="italic">what I build</tspan>  &gt;  <tspan font-style="italic">my limits</tspan>'
-          f',   <tspan font-style="italic">curiosity</tspan>  '
-          f'<tspan font-family="{MONO}" font-size="16">→ ∞</tspan>')  # set in the mono for a consistent arrow
-    p.append(t_(W / 2, y + 38, st, th, 20, "muted", MATH, anchor="middle", extra='xml:space="preserve"'))
-    y += 96
+    eq, _, eq_h = equation(th, W / 2, y + 26)
+    p.append(eq)
+    y += 26 + eq_h + 58
     p.append(heading(M, y, "Activity", th))
     act_svg, y = activity(th, y + 18, act)
     p.append(act_svg)
-    h = int(y + 36)
-    lab = (f"{NAME}. {AFFIL}. {EPIGRAPH} Abstract: {ABSTRACT} Selected work: {SELECTED['title']}. "
-           f"{SELECTED['text']} Right now: " + "; ".join(f"{a} ({b})" for a, b in NOW)
-           + ". Activity: contributions by type and repository, and the recent weeks as a grid.")
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {h}" width="{W}" height="{h}" role="img" '
-            f'aria-label="{e(lab)}"><title>{e(lab)}</title>{font_faces()}'
-            f'<rect width="{W}" height="{h}" fill="{th["paper"]}"/>{"".join(p)}</svg>\n')
+    lab = ("Objective: career* equals arg max over paths of the integral from 0 to infinity of e to the minus "
+           "rho t, times research, mathematics and impact, dt; subject to understanding growing, what I build "
+           "exceeding my limits, and rho going to 0. Activity: contributions by type and repository, "
+           "and the recent weeks as a grid.")
+    return svg(th, W, int(y + 36), "".join(p), lab, xlink=True)
+
+
+def pages(th, act):
+    """name -> svg for one theme."""
+    out = {"head": head(th), "tail": tail(th, act)}
+    for i in range(max(len(SELECTED), len(NOW))):
+        w = SELECTED[i] if i < len(SELECTED) else None
+        n = NOW[i] if i < len(NOW) else None
+        h = max(work_cell(th, w) if w else 0, now_cell(th, n) if n else 0)
+        out[f"work-{i + 1}"] = work_cell(th, w, h) if w else svg(th, HALF, h, "", "")
+        out[f"now-{i + 1}"] = now_cell(th, n, h) if n else svg(th, HALF, h, "", "")
+    return out
 
 
 def main():
@@ -255,8 +337,9 @@ def main():
     act = json.load(open(sys.argv[2])) if len(sys.argv) > 2 and os.path.exists(sys.argv[2]) else None
     os.makedirs(out, exist_ok=True)
     for theme, th in THEMES.items():
-        with open(os.path.join(out, f"profile-{theme}.svg"), "w", encoding="utf-8") as fh:
-            fh.write(page(th, act))
+        for name, doc in pages(th, act).items():
+            with open(os.path.join(out, f"profile-{name}-{theme}.svg"), "w", encoding="utf-8") as fh:
+                fh.write(doc)
 
 
 if __name__ == "__main__":

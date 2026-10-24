@@ -1,10 +1,14 @@
 """Daily activity for the last 12 months as a grid of day blocks (no year shown).
 
 Usage: python contrib.py <github-user> <out.svg> [calendar.json]
-THEME=light|dark (default dark). Uses GITHUB_TOKEN from the environment.
+THEME=light|dark (default dark). Tokens come from the environment.
 
-Data: GitHub's contribution calendar when it's visible. A private profile hides it,
-so then it counts the user's commits in public repositories instead (no extra token).
+Data: GitHub's contribution calendar, the same numbers as the graph on the profile, private
+contributions included. A private profile hides the calendar from everyone else, so reading it
+needs a token that belongs to the user: PROFILE_TOKEN, a classic personal access token with only
+the read:user scope, saved as a repository secret. Private repositories are never named: their
+contributions are counted under "private repositories". Without PROFILE_TOKEN it falls back to
+counting public activity with GITHUB_TOKEN, which gives a lower number.
 """
 import datetime as dt
 import json
@@ -20,12 +24,13 @@ TZ = dt.timezone(dt.timedelta(hours=3))  # Asia/Riyadh
 TODAY = dt.datetime.now(TZ).date()
 DAYS = [TODAY - dt.timedelta(days=i) for i in range(364, -1, -1)]
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
-KINDS, REPOS = {}, {}  # filled by from_public_activity: contributions per type and per repo
+PROFILE_TOKEN = os.environ.get("PROFILE_TOKEN", "")  # the user's own token: sees the private profile
+KINDS, REPOS = {}, {}  # contributions per type and per repo
 
 
-def api(url, body=None):
+def api(url, body=None, token=None):
     req = urllib.request.Request(url, data=json.dumps(body).encode() if body else None, headers={
-        "Authorization": f"bearer {TOKEN}", "Accept": "application/vnd.github+json",
+        "Authorization": f"bearer {token or TOKEN}", "Accept": "application/vnd.github+json",
         "Content-Type": "application/json", "User-Agent": "profile-chart"})
     return json.load(urllib.request.urlopen(req, timeout=30))
 
@@ -33,6 +38,39 @@ def api(url, body=None):
 def from_calendar(data):
     cal = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]
     return {d["date"]: d["contributionCount"] for w in cal["weeks"] for d in w["contributionDays"]}
+
+
+QUERY = """query($l:String!){ user(login:$l){ contributionsCollection{
+  totalCommitContributions totalIssueContributions totalPullRequestContributions
+  totalPullRequestReviewContributions restrictedContributionsCount
+  contributionCalendar{ totalContributions weeks{ contributionDays{ date contributionCount } } }
+  commitContributionsByRepository(maxRepositories:100){ repository{ nameWithOwner isPrivate } contributions{ totalCount } }
+  issueContributionsByRepository(maxRepositories:100){ repository{ nameWithOwner isPrivate } contributions{ totalCount } }
+  pullRequestContributionsByRepository(maxRepositories:100){ repository{ nameWithOwner isPrivate } contributions{ totalCount } }
+  pullRequestReviewContributionsByRepository(maxRepositories:100){ repository{ nameWithOwner isPrivate } contributions{ totalCount } }
+} } }"""
+
+
+def from_collection(data):
+    """The profile graph's numbers: per-day counts, the total GitHub prints above the graph, and the split
+    by type and by repository. Returns (counts, total)."""
+    col = data["data"]["user"]["contributionsCollection"]
+    cal = col["contributionCalendar"]
+    counts = {d["date"]: d["contributionCount"] for w in cal["weeks"] for d in w["contributionDays"]}
+    total = cal["totalContributions"]
+    kinds = {"Commits": col["totalCommitContributions"], "Pull requests": col["totalPullRequestContributions"],
+             "Issues": col["totalIssueContributions"], "Reviews": col["totalPullRequestReviewContributions"],
+             "Private": col["restrictedContributionsCount"]}
+    kinds["Other"] = max(0, total - sum(kinds.values()))  # repositories created, and the like
+    KINDS.update({k: v for k, v in kinds.items() if v})
+    for key in ("commit", "issue", "pullRequest", "pullRequestReview"):
+        for r in col[f"{key}ContributionsByRepository"]:
+            repo = r["repository"]
+            name = "private repositories" if repo["isPrivate"] else repo["nameWithOwner"]
+            REPOS[name] = REPOS.get(name, 0) + r["contributions"]["totalCount"]
+    if kinds["Private"]:
+        REPOS["private repositories"] = REPOS.get("private repositories", 0) + kinds["Private"]
+    return counts, total
 
 
 def get_all(url, pages=10):
@@ -99,18 +137,24 @@ def from_page():
     return out
 
 
-source = "sample"
+source, gh_total = "sample", None
 if len(sys.argv) > 3:
     counts, unit = from_calendar(json.load(open(sys.argv[3]))), "contributions"
 else:
     counts, unit = {}, "contributions"
-    try:
-        counts = from_calendar(api("https://api.github.com/graphql", {"query": """query($l:String!){ user(login:$l){
-          contributionsCollection{ contributionCalendar{ weeks{ contributionDays{ date contributionCount } } } } } }""",
-                                                                       "variables": {"l": user}}))
-        source = "api"
-    except Exception:
-        pass
+    for tok in [t for t in (PROFILE_TOKEN, TOKEN) if t]:
+        try:
+            counts, gh_total = from_collection(api("https://api.github.com/graphql",
+                                                   {"query": QUERY, "variables": {"l": user}}, tok))
+        except Exception as ex:
+            print("calendar not readable with this token:", ex)
+            counts, gh_total = {}, None
+        if gh_total:
+            source = "api"
+            DAYS = [dt.date.fromisoformat(d) for d in sorted(counts)]  # GitHub's own window
+            break
+        KINDS.clear()
+        REPOS.clear()
     if not sum(counts.values()):
         try:
             counts, source = from_page(), "page"
@@ -120,7 +164,7 @@ else:
         counts, source = from_public_activity(), "public"
 
 series = [counts.get(d.isoformat(), 0) for d in DAYS]
-total = sum(series)
+total = gh_total or sum(series)  # GitHub's figure when it gave one, so the two graphs agree
 if total == 0:
     sys.exit("No activity found; keeping the previous chart.")
 
@@ -179,10 +223,10 @@ legend = "".join(f'<rect x="{762 + i * 14.5:.1f}" y="{H - 30}" width="{CELL}" he
                  for i, c in enumerate(T["levels"]))
 stat_txt = f"{b(active)} active days   ·   Longest streak {days_(longest)}   ·   Current streak {days_(current)}"
 
-svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" font-family="{FONT}" role="img" aria-label="{total} {unit} in the last 12 months">
+svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" font-family="{FONT}" role="img" aria-label="{total} {unit} in the last year">
 <!-- source: {source} -->
 <rect x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="6" fill="{T['bg']}" stroke="{T['line']}"/>
-<text x="20" y="30" font-size="15" font-weight="600" fill="{T['fg']}">{total} {unit} in the last 12 months</text>
+<text x="20" y="30" font-size="15" font-weight="600" fill="{T['fg']}">{total} {unit} in the last year</text>
 <text x="{W - 20}" y="30" text-anchor="end" font-size="13" fill="{T['muted']}" xml:space="preserve">{stat_txt}</text>
 <g font-size="12" fill="{T['muted']}">{''.join(months)}{labels}
 <text x="754" y="{H - 20}" text-anchor="end">Less</text><text x="{762 + 5 * 14.5 + 4:.1f}" y="{H - 20}">More</text></g>
@@ -196,7 +240,7 @@ if os.environ.get("ACTIVITY_JSON"):  # numbers for the profile page (profile.py)
             from_public_activity()
         except Exception:
             pass
-    json.dump(dict(total=total, unit=unit, active=active, longest=longest, current=current,
+    json.dump(dict(total=total, unit=unit, source=source, active=active, longest=longest, current=current,
                    start=DAYS[0].isoformat(), series=series, kinds=KINDS,
                    repos=sorted(REPOS.items(), key=lambda kv: -kv[1])[:4]),
               open(os.environ["ACTIVITY_JSON"], "w"))

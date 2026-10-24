@@ -10,7 +10,7 @@ from xml.sax.saxutils import escape as e
 # ------------------------------------------------------------------ DATA
 ABOUT = [("University", "KFUPM"), ("Major", "Data Science, B.S."), ("Year", "Third year"),
          ("Focus", "Research & Math"), ("Based in", "Dammam, Saudi Arabia")]
-BUTTONS = [("web", "CC KFUPM website"), ("email", "Email"), ("linkedin", "LinkedIn"), ("x", "X")]
+BUTTONS = [("email", "Email"), ("linkedin", "LinkedIn"), ("x", "X")]
 SKILLS = ["Python", "Java", "NumPy", "pandas", "Matplotlib", "scikit-learn",
           "OOP", "Data structures", "Algorithms", "LaTeX", "Overleaf"]
 NOW = [  # icon, kind, title, caption, color

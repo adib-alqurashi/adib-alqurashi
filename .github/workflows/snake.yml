@@ -16,9 +16,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install fontTools (embeds only the letters each image uses)
+        run: python3 -m pip install --quiet fonttools
+
       - name: Draw contribution grid
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROFILE_TOKEN: ${{ secrets.PROFILE_TOKEN }}  # your own read:user token; see contrib.py
         run: |
           ACTIVITY_JSON=dist/activity.json python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/days.svg
           THEME=light python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/days-light.svg
