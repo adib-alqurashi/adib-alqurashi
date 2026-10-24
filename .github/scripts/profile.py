@@ -221,8 +221,9 @@ def activity(th, y, act):
     if not repos:
         p.append(t_(rx, y + 42, "fills in after the daily update", th, 14, "muted", SERIF, extra='font-style="italic"'))
     y += max(hh + 22, 42 + 4 * 36) + 20
-    who = ("Every contribution on my GitHub graph, private ones included"
-           if a.get("source") == "api" else "Public contributions")
+    who = "Public contributions"
+    if a.get("source") == "api":  # the same numbers as GitHub's own graph
+        who = "Every contribution on my GitHub graph" + (", private ones included" if (a.get("kinds") or {}).get("Private") else "")
     cap = (f"{who}; the grid shows the last {WEEKS} weeks. "
            f"Current streak: {a.get('current', '—')} days. Updated every day.")
     p.append(t_(M, y, e(cap), th, 15, "muted", SERIF, extra='font-style="italic"'))
