@@ -53,8 +53,8 @@ SELECTED = [  # title, text, link text, href. Four cells, two per row; the href 
     ("Study Timer",
      "An Obsidian plugin I wrote: a one-click study timer with streaks, weekly totals and a "
      "calendar of dated tasks.",
-     "code-lab / projects / study-timer  →",
-     "https://github.com/adib-alqurashi/code-lab/tree/main/projects/study-timer"),
+     "prototypes / obsidian / study-timer  →",
+     "https://github.com/adib-alqurashi/prototypes/tree/main/obsidian/study-timer"),
     ("KFUPM Computer Club website",
      "I manage the project and mentor its contributors: I write the issues, review every pull "
      "request and merge what ships.",
