@@ -42,8 +42,8 @@ ABSTRACT = (
 )
 SELECTED = [  # title, text, link text, href. Four cells, two per row; the href goes in README.md
     ("Articles",
-     "Two finished pieces, written in Adib's Mind: one on spectral decomposition and the geometry of "
-     "least squares, one on how small language models are distilled and quantised from large ones.",
+     "Two finished pieces: one on least squares as a projection and what the eigenvalues of a data "
+     "matrix keep, one on how small language models are distilled and quantised from large ones.",
      "adibs-mind / 2 Create / Articles  →",
      "https://github.com/adib-alqurashi/adibs-mind/tree/main/2%20Create/Articles"),
     ("Adib's Mind",
@@ -53,8 +53,8 @@ SELECTED = [  # title, text, link text, href. Four cells, two per row; the href 
     ("Study Timer",
      "An Obsidian plugin I wrote: a one-click study timer with streaks, weekly totals and a "
      "calendar of dated tasks.",
-     "adibs-mind / plugins / study-timer  →",
-     "https://github.com/adib-alqurashi/adibs-mind/tree/main/.obsidian/plugins/study-timer"),
+     "code-lab / projects / study-timer  →",
+     "https://github.com/adib-alqurashi/code-lab/tree/main/projects/study-timer"),
     ("KFUPM Computer Club website",
      "I manage the project and mentor its contributors: I write the issues, review every pull "
      "request and merge what ships.",
