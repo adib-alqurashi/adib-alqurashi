@@ -42,9 +42,11 @@ SELECTED = [  # kicker, title, text, link text, href. Two per row; the href goes
     ("Notes", "Adib's Mind",
      "My public notes in Obsidian: KFUPM courses, handwritten problems in LaTeX, and the articles I'm writing.",
      "github.com/adib-alqurashi/AdibMind  →", "https://github.com/adib-alqurashi/AdibMind"),
-    ("Leadership", "DSE Club · Applied Projects",
-     "I lead the committee and designed its five guided data science projects for spring 2027.",
-     "github.com/dse-club-kfupm  →", "https://github.com/dse-club-kfupm"),
+    ("Tools", "Obsidian plugins",
+     "I build plugins for Obsidian, the app I keep my notes in. My first is a study timer in the status "
+     "bar, with streaks, weekly totals and a calendar of dated tasks.",
+     "prototypes / obsidian / study-timer  →",
+     "https://github.com/adib-alqurashi/prototypes/tree/main/obsidian/study-timer"),
     ("Open source", "KFUPM Computer Club website",
      "I managed the project and mentored its contributors, from issues to reviews and merges. "
      "Built with Astro and Supabase.",
