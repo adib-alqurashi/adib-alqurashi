@@ -86,7 +86,7 @@ FETCH = [  # the fastfetch card: (key, value). "" is a blank line; ("-", "Title"
     ("IDE", "VS Code, Obsidian"),
     ("Tablet", "XP-Pen Deco"),
     "",
-    ("Languages.Code", "Python, Java, MATLAB, C, TypeScript"),
+    ("Languages.Code", "Python, Java, MATLAB, C, TS"),
     ("Languages.Docs", "LaTeX, Markdown"),
     ("Languages.Real", "Arabic, English"),
     "",
@@ -307,7 +307,7 @@ def short(name):
 
 FS, LH = 12, 18  # the card's text: size and line height. JetBrains Mono is 0.6 em per character.
 ART_FS = 8  # the portrait's characters
-ART_W = 270  # the portrait's width in px; its height follows the card, up to 1.55 times the width
+ART_W = 300  # the portrait's width and height in px: a circle, like the avatar on GitHub
 ART_CHARS = " .`-:/+osyhmN"  # from empty to full
 
 
@@ -329,7 +329,7 @@ def portrait(cols, rows):
     """The avatar as (brightness 0..1, edge fade) per character, cut to an oval (None outside it), or None
     when there is no avatar. The workflow downloads it to $AVATAR and installs Pillow."""
     try:
-        from PIL import Image, ImageOps
+        from PIL import Image, ImageFilter, ImageOps
         im = Image.open(os.environ.get("AVATAR", "")).convert("L")
     except Exception:
         return None
@@ -341,13 +341,14 @@ def portrait(cols, rows):
     else:
         nh = int(w / want)
         im = im.crop((0, (h - nh) // 2, w, (h - nh) // 2 + nh))
-    im = ImageOps.autocontrast(im, cutoff=1).resize((cols, rows), Image.LANCZOS)
+    im = im.filter(ImageFilter.GaussianBlur(max(1, min(im.size) / 80)))  # melts a halftone into tones
+    im = ImageOps.autocontrast(im, cutoff=2).resize((cols, rows), Image.LANCZOS)
     px, out = im.load(), []
     for r in range(rows):
         row = []
         for c in range(cols):
             rad = math.hypot((c + .5) / cols * 2 - 1, (r + .5) / rows * 2 - 1)
-            fade = 1 if rad < .72 else max(0.0, (1 - rad) / .28)  # a soft rim, like a vignette
+            fade = 1 if rad < .78 else max(0.0, (1 - rad) / .22)  # a soft rim, like a vignette
             row.append(None if rad > 1 else (px[c, r] / 255, fade))
         out.append(row)
     return out
@@ -364,7 +365,7 @@ def art(th, x, y, grid, dark):
                 ch, col = " ", None
             else:
                 v, fade = v
-                d = (v if dark else 1 - v) * fade
+                d = (v ** 0.7 if dark else 1 - v) * fade  # lift the mid-tones on the dark page
                 ch = ART_CHARS[round(d * n)]
                 col = th["ramp"][1 + min(3, int(d * 4))]
             if ch == " " and runs:
@@ -411,16 +412,16 @@ def tail(th, act):
     lines = fetch_lines(a)
     cw, pad, y0 = 0.6 * FS, 30, 46
     x_art = M + pad
-    x0 = x_art + ART_W + 34
+    x0 = x_art + ART_W + 30
     n = int((W - M - pad - x0) // cw)  # characters per line
     info_h = len(lines) * LH
     p = [t_(M, 24, f'<tspan fill="{th["ink"]}">{e(HANDLE)}</tspan>:~$ fastfetch', th, 14, "muted", MONO)]
     card_h = info_h + 2 * pad - (LH - FS) + 4
     p.append(rect(M, y0, W - 2 * M, card_h, th["soft"], 8))
-    art_h = min(info_h, ART_W * 1.55)
+    art_h = ART_W
     grid = portrait(int(ART_W / (0.6 * ART_FS)), int(art_h / (1.2 * ART_FS)))
     if grid:
-        p.append(art(th, x_art, y0 + pad + (info_h - art_h) / 2, grid, th is THEMES["dark"]))
+        p.append(art(th, x_art, y0 + pad + 2, grid, th is THEMES["dark"]))  # top-aligned, as fastfetch does
 
     def span(s, color):
         return f'<tspan fill="{th[color]}">{e(s)}</tspan>'
