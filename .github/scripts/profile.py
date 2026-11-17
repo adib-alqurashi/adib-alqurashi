@@ -5,13 +5,13 @@ Usage: python .github/scripts/profile.py <out_dir> [activity.json]
   -> writes, for each theme (dark, light):
      profile-head-<theme>.svg          name, abstract, Fig. 1 and the Selected work heading
      profile-work-<i>-<theme>.svg      Selected work, one cell per item (half the page each)
-     profile-now-<theme>.svg           Now and next: three stops on one line
-     profile-tail-<theme>.svg          Activity: contributions this year, and the repositories they went to
+     profile-tail-<theme>.svg          a fastfetch card: my avatar in ASCII, my setup and studies, contact,
+                                       and this year's contributions with the busiest repositories
 The page is cut into pieces because GitHub shows SVGs as images, and links inside an image do not
 work: README.md wraps each Selected work cell in its own link and lays the cells out two per row at
 50% width, so the pieces line up into one page. Keep the rows in README.md in step with SELECTED.
 The daily workflow passes activity.json from contrib.py (this year's daily counts and the split by
-repository), so the activity section is redrawn every day.
+repository) and downloads my avatar to $AVATAR, so the card is redrawn every day.
 
 Fig. 1 is Burgers' equation, solved below by finite differences in plain Python and drawn in the
 squares of a contribution graph: each row is a moment (top to bottom), each column a place, and stronger
@@ -25,6 +25,7 @@ Fonts are embedded (data: URIs) because GitHub serves SVGs as images, which cann
 piece embeds only the letters it uses.
 """
 import base64
+import calendar
 import datetime as dt
 import functools
 import json
@@ -74,23 +75,34 @@ SELECTED = [  # kicker, title, text, link text, href. Two per row; the href goes
      "and a moderated blog.",
      "cckfupm.vercel.app  →", "https://cckfupm.vercel.app"),
 ]
-NEXT = [  # kicker, title, items. The first stop is now; the other two are plans.
-    ("Now · Fall 2026", "Foundations", [
-        "Calculus II, data science, data structures, discrete maths and MATLAB at KFUPM",
-        "Stage 1 of the KAUST Academy AI program",
-        "Finishing my Principia competition entry"]),
-    ("Next · Spring 2027", "The toolkit", [
-        "Automatic differentiation and PyTorch",
-        "Numerical methods, then deep learning",
-        "Fourier series and first PDEs",
-        "A paper a week, from Lagaris (1998) to Raissi's PINNs (2019)"]),
-    ("Then · Summer 2027", "Scientific ML", [
-        "Numerical PDEs, step by step to Navier–Stokes",
-        "Optimization for learning",
-        "PINNs, neural operators and inverse problems",
-        "Working through DeepXDE"]),
+HANDLE = "adib@alqurashi"  # the card's title, as in my terminal prompt
+BIRTHDAY = None  # e.g. dt.date(2007, 3, 14) adds an Uptime line with my age, recounted every day
+FETCH = [  # the fastfetch card: (key, value). "" is a blank line; ("-", "Title") opens a section.
+    ("OS", "Ubuntu 26.04 LTS · COSMIC"),
+    ("Uptime", None),  # my age, from BIRTHDAY; left out while BIRTHDAY is None
+    ("Host", "Lenovo ThinkPad · 11th Gen Intel"),
+    ("Kernel", "Data Science & Engineering, KFUPM"),
+    ("Shell", "bash 5.3 · cosmic-term"),
+    ("IDE", "VS Code, Obsidian"),
+    ("Tablet", "XP-Pen Deco"),
+    "",
+    ("Languages.Code", "Python, Java, MATLAB, C, TypeScript"),
+    ("Languages.Docs", "LaTeX, Markdown"),
+    ("Languages.Real", "Arabic, English"),
+    "",
+    ("Research", "Scientific machine learning"),
+    ("Research.Methods", "PINNs, neural operators, PDEs"),
+    ("Role", "President, Applied Projects · DSE"),
+    "",
+    ("-", "Contact"),
+    ("Email", "adib.alqurashi@gmail.com"),
+    ("LinkedIn", "adib-alqurashi-347527444"),
+    ("X", "@adib_alqurashi"),
+    "",
+    ("-", "GitHub"),
+    ("@activity", None),  # contributions this year, then the busiest repositories as bars
 ]
-REPOS_SHOWN = 6
+REPOS_SHOWN = 4
 
 # ------------------------------------------------------------------ THEME
 SERIF = "Fr, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
@@ -281,36 +293,6 @@ def work_cell(th, item, side, h=None):
     return need if h is None else svg(th, HALF, h, "".join(p), f"{kicker}. {title}. {text} {link}", ("Fr", "JB"))
 
 
-def now_block(th):
-    """Now and next: three stops on one line, solid up to now and dashed for what is planned."""
-    gap = 40
-    cw = (W - 2 * M - 2 * gap) / 3
-    xs = [M + i * (cw + gap) for i in range(3)]
-    p, ly = [heading(M, 32, "Now and next", th)], 76
-    p.append(rect(M, ly - 1, xs[1] - M, 2, th["ink"], 1))
-    p.append(f'<line x1="{xs[1]:g}" y1="{ly}" x2="{W - M:g}" y2="{ly}" stroke="{th["rule"]}" '
-             f'stroke-width="2" stroke-dasharray="5 7"/>')
-    nodes = [rect(xs[0], ly - 8, 16, 16, th["ink"], 4),
-             rect(xs[1], ly - 8, 16, 16, th["ramp"][2], 4),
-             rect(xs[2] + 1, ly - 7, 14, 14, th["paper"], 4, f'stroke="{th["ramp"][3]}" stroke-width="2"')]
-    p += nodes
-    bottom = 0
-    for i, (kicker, title, items) in enumerate(NEXT):
-        x, y = xs[i], ly + 46
-        p.append(smallcaps(x, y, kicker, th, "ink" if i == 0 else "muted"))
-        y += 32
-        p.append(t_(x, y, e(title), th, 20, "ink", SERIF, 700))
-        y += 34
-        for it in items:
-            p.append(rect(x, y - 8, 6, 6, th["ink"] if i == 0 else th["ramp"][2], 1.5))
-            txt, last = para(x + 16, y, it, th, 15.5, cw - 16, 23)
-            p.append(txt)
-            y = last + 31
-        bottom = max(bottom, y)
-    lab = "Now and next. " + " ".join(f"{k}: {t}: {'; '.join(items)}." for k, t, items in NEXT)
-    return svg(th, W, bottom - 6, "".join(p), lab, ("Fr", "JB"))
-
-
 def year_total(a, year):
     """Contributions in the calendar year, from the daily series when there is one."""
     if a.get("series") and a.get("start"):
@@ -323,45 +305,167 @@ def short(name):
     return name.split("/", 1)[1] if name.lower().startswith(OWNER.lower() + "/") else name
 
 
-def tail(th, act):
-    """Activity: one number for the year, then each repository with its count as a row of squares."""
-    a = act or {}
+FS, LH = 12, 18  # the card's text: size and line height. JetBrains Mono is 0.6 em per character.
+ART_FS = 8  # the portrait's characters
+ART_W = 270  # the portrait's width in px; its height follows the card, up to 1.55 times the width
+ART_CHARS = " .`-:/+osyhmN"  # from empty to full
+
+
+def plural(n, unit):
+    return f"{n} {unit}{'' if n == 1 else 's'}"
+
+
+def uptime(born, today):
+    """Age the way fastfetch prints uptime: years, months, days."""
+    months = (today.year - born.year) * 12 + today.month - born.month - (today.day < born.day)
+    yy, mm = divmod(born.month - 1 + months, 12)
+    yy, mm = born.year + yy, mm + 1
+    last = dt.date(yy, mm, min(born.day, calendar.monthrange(yy, mm)[1]))
+    y, m = divmod(months, 12)
+    return f"{plural(y, 'year')}, {plural(m, 'month')}, {plural((today - last).days, 'day')}"
+
+
+def portrait(cols, rows):
+    """The avatar as (brightness 0..1, edge fade) per character, cut to an oval (None outside it), or None
+    when there is no avatar. The workflow downloads it to $AVATAR and installs Pillow."""
+    try:
+        from PIL import Image, ImageOps
+        im = Image.open(os.environ.get("AVATAR", "")).convert("L")
+    except Exception:
+        return None
+    want = cols * 0.6 / (rows * 1.2)  # the box's width / height
+    w, h = im.size
+    if w / h > want:
+        nw = int(h * want)
+        im = im.crop(((w - nw) // 2, 0, (w - nw) // 2 + nw, h))
+    else:
+        nh = int(w / want)
+        im = im.crop((0, (h - nh) // 2, w, (h - nh) // 2 + nh))
+    im = ImageOps.autocontrast(im, cutoff=1).resize((cols, rows), Image.LANCZOS)
+    px, out = im.load(), []
+    for r in range(rows):
+        row = []
+        for c in range(cols):
+            rad = math.hypot((c + .5) / cols * 2 - 1, (r + .5) / rows * 2 - 1)
+            fade = 1 if rad < .72 else max(0.0, (1 - rad) / .28)  # a soft rim, like a vignette
+            row.append(None if rad > 1 else (px[c, r] / 255, fade))
+        out.append(row)
+    return out
+
+
+def art(th, x, y, grid, dark):
+    """The portrait as text: denser characters and stronger greys where the photo is darker (light
+    theme) or brighter (dark theme), so it reads as a positive image on either background."""
+    n, lh, out = len(ART_CHARS) - 1, ART_FS * 1.2, []
+    for r, row in enumerate(grid):
+        runs = []  # [colour, text]
+        for v in row:
+            if v is None:
+                ch, col = " ", None
+            else:
+                v, fade = v
+                d = (v if dark else 1 - v) * fade
+                ch = ART_CHARS[round(d * n)]
+                col = th["ramp"][1 + min(3, int(d * 4))]
+            if ch == " " and runs:
+                runs[-1][1] += ch
+            elif runs and runs[-1][0] in (col, None):
+                runs[-1][0], runs[-1][1] = col, runs[-1][1] + ch
+            else:
+                runs.append([col, ch])
+        spans = "".join(f'<tspan fill="{c or th["muted"]}">{e(t)}</tspan>' for c, t in runs)
+        out.append(f'<text x="{x:g}" y="{y + (r + 1) * lh - 2:g}" font-family="{MONO}" font-size="{ART_FS}" '
+                   f'xml:space="preserve">{spans}</text>')
+    return "".join(out)
+
+
+def fetch_lines(a):
+    """What the card prints, top to bottom."""
     year = a.get("year") or dt.datetime.now(TZ).year
     total = year_total(a, year)
     repos = [(short(n), c) for n, c in (a.get("repos") or []) if c]
-    p, top = [heading(M, 44, "Activity", th)], 92
-    p.append(t_(M, top + 62, e(f"{total:,}" if total is not None else "—"), th, 84, "ink", DISPLAY, 700,
-                extra='letter-spacing="-3"'))
-    p.append(t_(M, top + 98, e(f"contributions in {year}"), th, 18, "muted", SERIF, extra='font-style="italic"'))
-    if repos:
-        p.append(t_(M, top + 126, e(f"across {len(repos)} repositories"), th, 18, "muted", SERIF,
-                    extra='font-style="italic"'))
-    rx, sq, step = M + 300, 9, 12
-    n = int((W - M - rx + step - sq) // step)
-    shown = repos[:REPOS_SHOWN]
-    peak = max([c for _, c in shown] or [1])
-    for i, (name, c) in enumerate(shown):
-        yy = top + 6 + i * 48
-        label = name if len(name) <= 40 else name[:39] + "…"
-        p.append(t_(rx, yy, e(label), th, 14.5, "ink", MONO))
-        p.append(t_(W - M, yy, str(c), th, 14.5, "muted", MONO, anchor="end"))
-        k = max(1, round(c / peak * n))
-        p += [rect(rx + j * step, yy + 11, sq, sq, th["ink"] if j < k else th["ramp"][0], 2) for j in range(n)]
-    if not shown:
-        p.append(t_(rx, top + 6, "fills in after the daily update", th, 15, "muted", SERIF, extra='font-style="italic"'))
-    y = max(top + 140, top + 6 + len(shown) * 48) + 30
-    who = "Public contributions"
-    if a.get("source") == "api":  # the same numbers as GitHub's own graph
-        who = "Every contribution on my GitHub graph" + (", private ones included" if (a.get("kinds") or {}).get("Private") else "")
-    p.append(t_(M, y, e(f"{who}, counted from 1 January. Updated every day."), th, 15, "muted", SERIF,
-                extra='font-style="italic"'))
-    lab = f"Activity: {total} contributions in {year}. " + ", ".join(f"{nm} {c}" for nm, c in shown)
-    return svg(th, W, int(y + 34), "".join(p), lab)
+    lines = [("title",)]
+    for item in FETCH:
+        if item == "":
+            lines.append(("blank",))
+        elif item[0] == "-":
+            lines.append(("sec", item[1]))
+        elif item[0] == "Uptime":
+            if BIRTHDAY:
+                lines.append(("kv", "Uptime", uptime(BIRTHDAY, dt.datetime.now(TZ).date())))
+        elif item[0] == "@activity":
+            lines.append(("kv", f"Contributions.{year}", f"{total:,}" if total is not None else "—"))
+            lines.append(("kv", "Repositories", f"{len(repos)} this year" if repos else "—"))
+            peak = max([c for _, c in repos[:REPOS_SHOWN]] or [1])
+            lines += [("repo", nm, c, peak) for nm, c in repos[:REPOS_SHOWN]]
+        else:
+            lines.append(("kv",) + tuple(item))
+    lines += [("blank",), ("palette",)]
+    return lines
+
+
+def tail(th, act):
+    """A fastfetch card: my avatar in ASCII on the left; system, studies, contact and this year's
+    GitHub activity on the right."""
+    a = act or {}
+    lines = fetch_lines(a)
+    cw, pad, y0 = 0.6 * FS, 30, 46
+    x_art = M + pad
+    x0 = x_art + ART_W + 34
+    n = int((W - M - pad - x0) // cw)  # characters per line
+    info_h = len(lines) * LH
+    p = [t_(M, 24, f'<tspan fill="{th["ink"]}">{e(HANDLE)}</tspan>:~$ fastfetch', th, 14, "muted", MONO)]
+    card_h = info_h + 2 * pad - (LH - FS) + 4
+    p.append(rect(M, y0, W - 2 * M, card_h, th["soft"], 8))
+    art_h = min(info_h, ART_W * 1.55)
+    grid = portrait(int(ART_W / (0.6 * ART_FS)), int(art_h / (1.2 * ART_FS)))
+    if grid:
+        p.append(art(th, x_art, y0 + pad + (info_h - art_h) / 2, grid, th is THEMES["dark"]))
+
+    def span(s, color):
+        return f'<tspan fill="{th[color]}">{e(s)}</tspan>'
+
+    label = []
+    for i, ln in enumerate(lines):
+        y = y0 + pad + FS + i * LH
+        kind, body = ln[0], ""
+        if kind == "title":
+            body = span(HANDLE, "ink") + span(" " + "─" * (n - len(HANDLE) - 1), "rule")
+        elif kind == "sec":
+            body = span("- ", "muted") + span(ln[1], "ink") + span(" " + "─" * (n - len(ln[1]) - 3), "rule")
+        elif kind == "kv":
+            key, val = ln[1], ln[2]
+            room = n - len(key) - 5
+            if len(val) > room - 2:
+                val = val[:room - 3] + "…"
+            body = (span(". ", "muted") + span(key, "ink") + span(":", "muted")
+                    + span(" " + "." * (room - len(val)) + " ", "rule") + span(val, "ink"))
+            label.append(f"{key}: {val}")
+        elif kind == "repo":
+            name, c, peak = ln[1], str(ln[2]), ln[3]
+            name = name if len(name) <= 28 else name[:27] + "…"
+            lead = n - len(name) - len(c) - 4
+            k = max(1, round(int(c) / peak * lead))
+            body = (span(". ", "muted") + span(name, "ink") + span(" " + " " * k + "." * (lead - k) + " ", "rule")
+                    + span(c, "ink"))
+            sx = x0 + (len(name) + 3) * cw
+            p += [rect(sx + j * cw + 0.6, y - FS * 0.72, cw - 1.2, cw - 1.2, th["ink"], 1.2) for j in range(k)]
+            label.append(f"{name}: {c}")
+        elif kind == "palette":
+            p += [rect(x0 + j * 3 * cw, y - FS * 0.85, 3 * cw - 2, FS, col, 2) for j, col in enumerate(th["ramp"][1:])]
+        if body:
+            p.append(f'<text x="{x0:g}" y="{y:g}" font-family="{MONO}" font-size="{FS}" '
+                     f'xml:space="preserve">{body}</text>')
+    y = y0 + card_h + 32
+    priv = ", private ones included" if (a.get("kinds") or {}).get("Private") else ""
+    p.append(t_(M, y, e(f"Contributions are counted from 1 January{priv}. Redrawn every day."), th, 15, "muted",
+                SERIF, extra='font-style="italic"'))
+    return svg(th, W, y + 30, "".join(p), f"{HANDLE}: fastfetch. " + "; ".join(label), ("Fr", "JB"))
 
 
 def pages(th, act):
-    """name -> svg for one theme: head, the work cells two per row (same height within a row), now, tail."""
-    out = {"head": head(th), "now": now_block(th), "tail": tail(th, act)}
+    """name -> svg for one theme: head, the work cells two per row (same height within a row), the card."""
+    out = {"head": head(th), "tail": tail(th, act)}
     for r in range(0, len(SELECTED), 2):
         row = SELECTED[r:r + 2]
         h = max(work_cell(th, it, i) for i, it in enumerate(row))
