@@ -26,12 +26,11 @@ from xml.sax.saxutils import escape as e, unescape
 # ------------------------------------------------------------------ DATA
 NAME = "Adib Alqurashi"
 OWNER = "adib-alqurashi"  # dropped from the front of my own repository names in Activity
-BIO = (  # **bold** marks the phrases that carry the paragraph
-    "I'm a **data science and engineering** student at **KFUPM** in Dhahran. I'm drawn to research and "
-    "want an academic career in **scientific machine learning**: physics-informed neural networks, neural "
-    "operators, and numerical methods for differential equations. For now I'm building the mathematics "
-    "and the code it takes, and keeping what I learn in the open."
-)
+LEAD = ("I'm a **data science and engineering** student at **KFUPM**, drawn to research and aiming for an "
+        "academic career in **scientific machine learning**.")  # **bold** marks the key phrases
+BIO = ("I'm most interested in physics-informed neural networks, neural operators and numerical methods for "
+       "differential equations. For now I'm building the mathematics and the code they take, and keeping what "
+       "I learn in the open.")
 TAGS = ["Scientific ML", "PINNs", "Neural operators", "Numerical PDEs", "Research", "Academia"]
 SELECTED = [  # kicker, title, text, link text, href. Two per row; the href goes in README.md
     ("Research", "Spikes become jumps",
@@ -141,7 +140,7 @@ def svg(th, w, h, body, label, fams=("Fr", "FrD", "JB")):
             f'<rect width="{w:g}" height="{h:g}" fill="{th["paper"]}"/>{body}</svg>\n')
 
 
-def rich_para(x, y, text, th, size, width, lh):
+def rich_para(x, y, text, th, size, width, lh, color="ink"):
     """A wrapped paragraph where **bold** spans are set in the bold face. Returns markup and the last
     baseline."""
     words, bold = [], False
@@ -168,7 +167,7 @@ def rich_para(x, y, text, th, size, width, lh):
         spans = "".join(f'<tspan font-weight="{700 if b else 400}">{e(piece)}{" " if sp else ""}</tspan>'
                         for piece, b, sp in line)
         out.append(f'<text x="{x:g}" y="{y + i * lh:g}" font-family="{SERIF}" font-size="{size}" '
-                   f'fill="{th["ink"]}" xml:space="preserve">{spans}</text>')
+                   f'fill="{th[color]}" xml:space="preserve">{spans}</text>')
     return "".join(out), y + (len(lines) - 1) * lh
 
 
@@ -190,7 +189,9 @@ def head(th):
     p.append(t_(M, y, e(NAME), th, 64, "ink", DISPLAY, 700, extra='letter-spacing="-2.4"'))
     y += 34
     pad = 34
-    body, last = rich_para(M + pad, y + pad + 22, BIO, th, 20.5, W - 2 * M - 2 * pad, 33)
+    lead, last = rich_para(M + pad, y + pad + 26, LEAD, th, 24, W - 2 * M - 2 * pad, 36)
+    body, last = rich_para(M + pad, last + 40, BIO, th, 18, W - 2 * M - 2 * pad, 29, "muted")
+    body = lead + body
     tags, bottom = chips(M + pad, last + 40, TAGS, th, W - M - pad)
     card_h = bottom + pad - y
     p.append(rect(M, y, W - 2 * M, card_h, th["soft"], 12, f'stroke="{th["rule"]}"'))
@@ -200,7 +201,7 @@ def head(th):
     p.append(tags)
     y += card_h + 66
     p.append(heading(M, y, "Selected work", th))
-    lab = f"{NAME}. {BIO.replace('**', '')} Interests: {', '.join(TAGS)}."
+    lab = f"{NAME}. {LEAD.replace('**', '')} {BIO} Interests: {', '.join(TAGS)}."
     return svg(th, W, y + 12, "".join(p), lab)
 
 
