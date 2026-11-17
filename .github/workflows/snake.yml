@@ -20,13 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install fontTools (embeds only the letters each image uses) and Pillow (the ASCII portrait)
-        run: python3 -m pip install --quiet fonttools pillow
-
-      - name: Download my avatar for the ASCII portrait
-        run: |
-          mkdir -p dist
-          curl -fsSL "https://github.com/${{ github.repository_owner }}.png?size=400" -o dist/avatar.png || echo "no avatar; the card is drawn without it"
+      - name: Install fontTools (embeds only the letters each image uses)
+        run: python3 -m pip install --quiet fonttools
 
       - name: Draw contribution grid
         env:
@@ -36,10 +31,8 @@ jobs:
           ACTIVITY_JSON=dist/activity.json python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/days.svg
           THEME=light python3 .github/scripts/contrib.py "${{ github.repository_owner }}" dist/days-light.svg
 
-      - name: Draw the profile page (the fastfetch card uses dist/activity.json and dist/avatar.png)
-        env:
-          AVATAR: dist/avatar.png
-        run: python3 .github/scripts/profile.py dist dist/activity.json
+      - name: Draw the profile page
+        run: python3 .github/scripts/profile.py dist
 
       - name: Push to output branch
         run: |
