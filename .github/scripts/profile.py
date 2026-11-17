@@ -1,9 +1,9 @@
-"""Draws the profile as the first page of a research paper: title, abstract, a figure, selected work,
-what comes next, and this year's activity.
+"""Draws the profile as the first page of a research paper: title, a short bio, selected work, and a
+fastfetch card with my avatar in ASCII and this year's activity.
 
 Usage: python .github/scripts/profile.py <out_dir> [activity.json]
   -> writes, for each theme (dark, light):
-     profile-head-<theme>.svg          name, abstract, Fig. 1 and the Selected work heading
+     profile-head-<theme>.svg          name, bio and the Selected work heading
      profile-work-<i>-<theme>.svg      Selected work, one cell per item (half the page each)
      profile-tail-<theme>.svg          a fastfetch card: my avatar in ASCII, my setup and studies, contact,
                                        and this year's contributions with the busiest repositories
@@ -12,10 +12,6 @@ work: README.md wraps each Selected work cell in its own link and lays the cells
 50% width, so the pieces line up into one page. Keep the rows in README.md in step with SELECTED.
 The daily workflow passes activity.json from contrib.py (this year's daily counts and the split by
 repository) and downloads my avatar to $AVATAR, so the card is redrawn every day.
-
-Fig. 1 is Burgers' equation, solved below by finite differences in plain Python and drawn in the
-squares of a contribution graph: each row is a moment (top to bottom), each column a place, and stronger
-cells move faster. The pale seam down the middle is the shock.
 
 Edit the DATA section to change what the page says; everything else is layout. Paragraphs are
 wrapped automatically.
@@ -27,7 +23,6 @@ piece embeds only the letters it uses.
 import base64
 import calendar
 import datetime as dt
-import functools
 import json
 import math
 import os
@@ -39,40 +34,27 @@ from xml.sax.saxutils import escape as e, unescape
 # ------------------------------------------------------------------ DATA
 NAME = "Adib Alqurashi"
 OWNER = "adib-alqurashi"  # dropped from the front of my own repository names in Activity
-AFFIL = "Data science undergraduate at KFUPM  ·  Dhahran, Saudi Arabia"
-EPIGRAPH = "“I have limits. What I create will go beyond them.”"
 ABSTRACT = (
-    "I want to build neural networks that respect the laws of physics. My focus is scientific machine "
-    "learning: physics-informed neural networks, neural operators, and the numerical methods for "
-    "differential equations they are tested against. I'm a data science undergraduate at KFUPM, learning "
-    "the mathematics and the code this takes, on my way to a research career in SciML. Along the way I "
-    "keep what I learn in the open and lead the Applied Projects Committee of KFUPM's Data Engineering "
-    "& Science Club."
+    "I'm a data science and engineering student at KFUPM in Dhahran. I'm drawn to research and want an "
+    "academic career in scientific machine learning: physics-informed neural networks, neural operators, "
+    "and numerical methods for differential equations. For now I'm building the mathematics and the code "
+    "it takes, and keeping what I learn in the open."
 )
-FIGURE = ("Burgers' equation sharpening into a shock, a classic test problem for physics-informed "
-          "neural networks. Each row is a moment, from top to bottom; the stronger a cell, the faster the flow. "
-          "Solved by finite differences each time this page is drawn.")
 SELECTED = [  # kicker, title, text, link text, href. Two per row; the href goes in README.md
-    ("Research · Principia 2026", "Spikes become jumps",
-     "My Principia Fall Competition entry: when a backward recursion stops approximating its ODE. "
-     "A measure-valued limit theorem, numerical experiments, and the jump it forces in the adjoint "
-     "of a residual network.",
+    ("Research", "Spikes become jumps",
+     "My Principia Fall Competition 2026 entry: a paper and experiments on when a backward recursion "
+     "converges to its ODE, and what it means for residual networks.",
      "Principia-Fall-Competition-2026  →",
      "https://github.com/adib-alqurashi/Principia-Fall-Competition-2026"),
     ("Notes", "Adib's Mind",
-     "My second brain in Obsidian, public on GitHub: KFUPM course notes, handwritten problem boards "
-     "and LaTeX, and two articles in progress, on least squares as a projection and on distilling "
-     "small language models.",
+     "My public notes in Obsidian: KFUPM courses, handwritten problems in LaTeX, and the articles I'm writing.",
      "github.com/adib-alqurashi/AdibMind  →", "https://github.com/adib-alqurashi/AdibMind"),
     ("Leadership", "DSE Club · Applied Projects",
-     "I lead the committee: I founded its GitHub organisation and designed five guided prediction "
-     "projects for spring 2027, from Kepler exoplanets to well-log geology, each scored on hidden "
-     "test data.",
+     "I lead the committee and designed its five guided data science projects for spring 2027.",
      "github.com/dse-club-kfupm  →", "https://github.com/dse-club-kfupm"),
     ("Open source", "KFUPM Computer Club website",
-     "I managed the project and mentored its contributors: I wrote the issues, reviewed the pull "
-     "requests and merged what shipped. Astro, TypeScript and Supabase, with member accounts, events "
-     "and a moderated blog.",
+     "I managed the project and mentored its contributors, from issues to reviews and merges. "
+     "Built with Astro and Supabase.",
      "cckfupm.vercel.app  →", "https://cckfupm.vercel.app"),
 ]
 HANDLE = "adib@alqurashi"  # the card's title, as in my terminal prompt
@@ -185,65 +167,6 @@ def rect(x, y, w, h, fill, rx=3, extra=""):
     return f'<rect x="{x:g}" y="{y:g}" width="{w:g}" height="{h:g}" rx="{rx:g}" fill="{fill}" {extra}/>'
 
 
-# ------------------------------------------------------------------ Fig. 1
-FIG_COLS, FIG_ROWS, FIG_CELL, FIG_STEP = 51, 12, 12, 15  # odd, so the middle column sits on the shock
-
-
-@functools.lru_cache(maxsize=None)
-def burgers(cols=FIG_COLS, rows=FIG_ROWS, nx=241, t_end=1.0, nu=0.01 / math.pi):
-    """Speed |u| of the viscous Burgers equation on [-1, 1], starting from u = -sin(pi x) with u = 0 at
-    both ends (the problem Raissi, Perdikaris and Karniadakis used to introduce PINNs). Godunov flux for
-    the transport, central differences for the viscosity. Returns rows x cols: row r is a time between
-    0 and t_end, column c a place."""
-    dx = 2 / (nx - 1)
-    xs = [-1 + i * dx for i in range(nx)]
-    u = [-math.sin(math.pi * x) for x in xs]
-    u[0] = u[-1] = 0.0
-
-    def flux(a, b):  # exact Riemann flux for f(u) = u^2 / 2
-        if a <= b:
-            return a * a / 2 if a > 0 else b * b / 2 if b < 0 else 0.0
-        return max(a * a, b * b) / 2
-
-    def sample(u):  # |u| at the centre of each column, by linear interpolation
-        out = []
-        for c in range(cols):
-            x = -1 + (c + 0.5) * 2 / cols
-            i = min(nx - 2, int((x + 1) / dx))
-            w = (x - xs[i]) / dx
-            out.append(abs(u[i] * (1 - w) + u[i + 1] * w))
-        return out
-
-    snaps, t, dt_max = [sample(u)], 0.0, 0.4 * dx  # |u| <= 1, so this keeps the scheme stable
-    for r in range(1, rows):
-        target = t_end * r / (rows - 1)
-        while t < target - 1e-12:
-            h = min(dt_max, target - t)
-            F = [flux(u[i], u[i + 1]) for i in range(nx - 1)]
-            k = nu * h / dx ** 2
-            u = [0.0] + [u[i] - h / dx * (F[i] - F[i - 1]) + k * (u[i + 1] - 2 * u[i] + u[i - 1])
-                         for i in range(1, nx - 1)] + [0.0]
-            t += h
-        snaps.append(sample(u))
-    return tuple(tuple(row) for row in snaps)
-
-
-def figure(th, y):
-    """Fig. 1 as a contribution graph, then its caption. Returns markup and the height used."""
-    grid_w = FIG_COLS * FIG_STEP - (FIG_STEP - FIG_CELL)
-    x0 = (W - grid_w) / 2
-    out = []
-    for r, row in enumerate(burgers()):
-        for c, v in enumerate(row):
-            lvl = 0 if v < 0.05 else 1 + min(3, int(v * 4))
-            out.append(rect(x0 + c * FIG_STEP, y + r * FIG_STEP, FIG_CELL, FIG_CELL, th["ramp"][lvl], 2.5))
-    cy = y + FIG_ROWS * FIG_STEP - (FIG_STEP - FIG_CELL) + 40
-    out.append(t_(M, cy, "Fig. 1", th, 15, "ink", SERIF, 700))
-    cap, last = para(M + 54, cy, FIGURE, th, 15, W - 2 * M - 54, 23, "muted", 'font-style="italic"')
-    out.append(cap)
-    return "".join(out), last - y
-
-
 # ------------------------------------------------------------------ pieces
 def svg(th, w, h, body, label, fams=("Fr", "FrD", "JB")):
     chars = "".join(sorted(set(unescape(re.sub(r"<defs>.*?</defs>|<[^>]+>", "", body, flags=re.S)))))
@@ -255,23 +178,16 @@ def svg(th, w, h, body, label, fams=("Fr", "FrD", "JB")):
 def head(th):
     p, y = [], 70
     p.append(t_(M, y, e(NAME), th, 64, "ink", DISPLAY, 700, extra='letter-spacing="-2.4"'))
-    y += 38
-    p.append(t_(M, y, e(AFFIL), th, 18, "muted", SERIF, extra='xml:space="preserve"'))
-    y += 32
-    p.append(t_(M, y, e(EPIGRAPH), th, 18.5, "ink", SERIF, extra='font-style="italic"'))
-    y += 34
+    y += 36
     body, _ = para(0, 0, ABSTRACT, th, 19.5, W - 2 * M - 56, 31)
     box_h = 62 + 31 * body.count("<text")
     p.append(rect(M, y, W - 2 * M, box_h, th["soft"], 8) + rect(M, y + 14, 3, box_h - 28, th["ink"], 1.5))
     p.append(smallcaps(M + 28, y + 32, "Abstract", th, "ink"))
     abstract, _ = para(M + 28, y + 66, ABSTRACT, th, 19.5, W - 2 * M - 56, 31)
     p.append(abstract)
-    y += box_h + 48
-    fig, fig_h = figure(th, y)
-    p.append(fig)
-    y += fig_h + 72
+    y += box_h + 66
     p.append(heading(M, y, "Selected work", th))
-    lab = f"{NAME}. {AFFIL}. {EPIGRAPH} Abstract: {ABSTRACT} Figure 1: {FIGURE}"
+    lab = f"{NAME}. {ABSTRACT}"
     return svg(th, W, y + 12, "".join(p), lab)
 
 
@@ -284,11 +200,11 @@ def work_cell(th, item, side, h=None):
     """One Selected work item in half the page; side 0 is the left column, 1 the right."""
     kicker, title, text, link, _ = item
     x = M if side == 0 else M + COLW + 48 - HALF
-    p = [smallcaps(x, TOP, kicker, th), t_(x, TOP + 30, e(title), th, 20, "ink", SERIF, 700)]
-    txt, last = para(x, TOP + 60, text, th, 17.5, COLW, 27)
+    p = [smallcaps(x, TOP, kicker, th), t_(x, TOP + 29, e(title), th, 19, "ink", SERIF, 700)]
+    txt, last = para(x, TOP + 57, text, th, 16.5, COLW, 25)
     p.append(txt)
-    link_y = last + 34
-    p.append(t_(x, link_y, e(link), th, 15.5, "ink", MONO, extra='text-decoration="underline"'))
+    link_y = last + 32
+    p.append(t_(x, link_y, e(link), th, 15, "ink", MONO, extra='text-decoration="underline"'))
     need = link_y + PAD
     return need if h is None else svg(th, HALF, h, "".join(p), f"{kicker}. {title}. {text} {link}", ("Fr", "JB"))
 
@@ -457,11 +373,7 @@ def tail(th, act):
         if body:
             p.append(f'<text x="{x0:g}" y="{y:g}" font-family="{MONO}" font-size="{FS}" '
                      f'xml:space="preserve">{body}</text>')
-    y = y0 + card_h + 32
-    priv = ", private ones included" if (a.get("kinds") or {}).get("Private") else ""
-    p.append(t_(M, y, e(f"Contributions are counted from 1 January{priv}. Redrawn every day."), th, 15, "muted",
-                SERIF, extra='font-style="italic"'))
-    return svg(th, W, y + 30, "".join(p), f"{HANDLE}: fastfetch. " + "; ".join(label), ("Fr", "JB"))
+    return svg(th, W, y0 + card_h + 24, "".join(p), f"{HANDLE}: fastfetch. " + "; ".join(label), ("Fr", "JB"))
 
 
 def pages(th, act):
