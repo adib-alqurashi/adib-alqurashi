@@ -10,8 +10,8 @@ work: README.md wraps each Selected work cell in its own link and lays the cells
 
 Edit the DATA section to change what the page says; everything else is layout. Paragraphs are
 wrapped automatically.
-Colour: GitHub's own background and text colours and no accent, so the page sits inside the
-profile as if GitHub drew it. The greys run evenly from background to text.
+Colour: GitHub's own background and text colours, with GitHub's link blue for the project titles
+(as on pinned repositories), so the page sits inside the profile as if GitHub drew it.
 Fonts are embedded (data: URIs) because GitHub serves SVGs as images, which cannot fetch fonts; each
 piece embeds only the letters it uses.
 """
@@ -56,9 +56,9 @@ SERIF = "Fr, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Ar
 DISPLAY = "FrD, " + SERIF
 MONO = "JB, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
 THEMES = {  # GitHub's Primer colours: canvas, foreground, muted, border, subtle canvas
-    "dark": dict(paper="#0d1117", ink="#f0f6fc", muted="#9198a1", rule="#3d444d", soft="#151b23",
+    "dark": dict(paper="#0d1117", ink="#f0f6fc", muted="#9198a1", rule="#3d444d", soft="#151b23", link="#4493f8",
                  ramp=["#151b23", "#2f363f", "#59636e", "#9198a1", "#f0f6fc"]),
-    "light": dict(paper="#ffffff", ink="#1f2328", muted="#59636e", rule="#d1d9e0", soft="#f6f8fa",
+    "light": dict(paper="#ffffff", ink="#1f2328", muted="#59636e", rule="#d1d9e0", soft="#f6f8fa", link="#0969da",
                   ramp=["#eff2f5", "#c8d1da", "#8c959f", "#59636e", "#1f2328"]),
 }
 W, M = 880, 48  # width, page margin
@@ -211,11 +211,11 @@ def work_cell(th, item, side, h=None):
     """One Selected work item in half the page; side 0 is the left column, 1 the right."""
     kicker, title, text, link, _ = item
     x = M if side == 0 else M + COLW + 48 - HALF
-    p = [smallcaps(x, TOP, kicker, th), t_(x, TOP + 29, e(title), th, 19, "ink", SERIF, 700)]
+    p = [smallcaps(x, TOP, kicker, th), t_(x, TOP + 29, e(title), th, 19, "link", SERIF, 700)]  # GitHub's link blue
     txt, last = para(x, TOP + 57, text, th, 16.5, COLW, 25)
     p.append(txt)
     link_y = last + 32
-    p.append(t_(x, link_y, e(link), th, 15, "ink", MONO, extra='text-decoration="underline"'))
+    p.append(t_(x, link_y, e(link), th, 14, "muted", MONO))
     need = link_y + PAD
     return need if h is None else svg(th, HALF, h, "".join(p), f"{kicker}. {title}. {text} {link}", ("Fr", "JB"))
 
