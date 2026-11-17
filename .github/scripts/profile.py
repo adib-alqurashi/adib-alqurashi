@@ -28,9 +28,8 @@ NAME = "Adib Alqurashi"
 OWNER = "adib-alqurashi"  # dropped from the front of my own repository names in Activity
 LEAD = ("I'm a **data science and engineering** student at **KFUPM**, drawn to research and aiming for an "
         "academic career in **scientific machine learning**.")  # **bold** marks the key phrases
-BIO = ("I'm most interested in physics-informed neural networks, neural operators and numerical methods for "
-       "differential equations. For now I'm building the mathematics and the code they take, and keeping what "
-       "I learn in the open.")
+BIO = ("Most interested in physics-informed neural networks, neural operators and numerical methods for "
+       "differential equations. For now, I'm building the mathematics and the code they take.")
 TAGS = ["Scientific ML", "PINNs", "Neural operators", "Numerical PDEs", "Research", "Academia"]
 SELECTED = [  # kicker, title, text, link text, href. Two per row; the href goes in README.md
     ("Research", "Spikes become jumps",
@@ -173,33 +172,33 @@ def rich_para(x, y, text, th, size, width, lh, color="ink"):
 
 def chips(x, y, tags, th, right):
     """Tags as outlined pills in the mono face, wrapping at `right`. Returns markup and the bottom edge."""
-    out, cx, cy, h = [], x, y, 32
+    out, cx, cy, h = [], x, y, 26
     for tag in tags:
-        w = len(tag) * 13 * 0.6 + 26
+        w = len(tag) * 12 * 0.6 + 22
         if cx + w > right and cx > x:
             cx, cy = x, cy + h + 10
-        out.append(rect(cx, cy, w, h, th["paper"], 16, f'stroke="{th["rule"]}"'))
-        out.append(t_(cx + w / 2, cy + 21, e(tag), th, 13, "muted", MONO, 500, "middle"))
-        cx += w + 10
+        out.append(rect(cx, cy, w, h, th["paper"], 13, f'stroke="{th["rule"]}"'))
+        out.append(t_(cx + w / 2, cy + 17.5, e(tag), th, 12, "muted", MONO, 500, "middle"))
+        cx += w + 8
     return "".join(out), cy + h
 
 
 def head(th):
     p, y = [], 70
     p.append(t_(M, y, e(NAME), th, 64, "ink", DISPLAY, 700, extra='letter-spacing="-2.4"'))
-    y += 34
-    pad = 34
-    lead, last = rich_para(M + pad, y + pad + 26, LEAD, th, 24, W - 2 * M - 2 * pad, 36)
-    body, last = rich_para(M + pad, last + 40, BIO, th, 18, W - 2 * M - 2 * pad, 29, "muted")
+    y += 30
+    pad = 26
+    lead, last = rich_para(M + pad, y + pad + 20, LEAD, th, 19.5, W - 2 * M - 2 * pad, 29)
+    body, last = rich_para(M + pad, last + 30, BIO, th, 15.5, W - 2 * M - 2 * pad, 24, "muted")
     body = lead + body
-    tags, bottom = chips(M + pad, last + 40, TAGS, th, W - M - pad)
+    tags, bottom = chips(M + pad, last + 33, TAGS, th, W - M - pad)
     card_h = bottom + pad - y
-    p.append(rect(M, y, W - 2 * M, card_h, th["soft"], 12, f'stroke="{th["rule"]}"'))
+    p.append(rect(M, y, W - 2 * M, card_h, th["soft"], 10, f'stroke="{th["rule"]}"'))
     p.append(body)
-    p.append(f'<line x1="{M + pad:g}" y1="{last + 21:g}" x2="{W - M - pad:g}" y2="{last + 21:g}" '
+    p.append(f'<line x1="{M + pad:g}" y1="{last + 17:g}" x2="{W - M - pad:g}" y2="{last + 17:g}" '
              f'stroke="{th["rule"]}"/>')
     p.append(tags)
-    y += card_h + 66
+    y += card_h + 58
     p.append(heading(M, y, "Selected work", th))
     lab = f"{NAME}. {LEAD.replace('**', '')} {BIO} Interests: {', '.join(TAGS)}."
     return svg(th, W, y + 12, "".join(p), lab)
